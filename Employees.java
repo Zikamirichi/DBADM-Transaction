@@ -8,13 +8,19 @@ public class Employees {
     String extension;
     String email;
     String jobTitle;
-    String employeeType;  
+    String employeeType;
+    int isDeactivated;
+    int isSalesRep;
+    int isSalesManager;
+    int isInventoryManager;
     String officeCode;
     String startDate;
     String endDate;
     String reason;
     Double quota;
     int salesManagerNumber;      
+    String city;
+    String country;
 
     public Employees() {}
     
@@ -95,7 +101,7 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments LOCK IN SHARE MODE");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments s LEFT JOIN offices o ON s.officeCode = o.officeCode LOCK IN SHARE MODE");
             
             System.out.println("\nPress enter key to start retrieving the data");
             sc.nextLine();
@@ -109,8 +115,11 @@ public class Employees {
                 reason = rs.getString("reason");
                 quota = rs.getDouble("quota");
                 salesManagerNumber = rs.getInt("salesManagerNumber");
+                city = rs.getString("city");
+                country = rs.getString("country");
 
                 System.out.println("\nOffice Code: " + officeCode);
+                System.out.println("  |- " + city + ", " + country);
                 System.out.println("Start Date: " + startDate);
                 System.out.println("End Date: " + endDate);
                 System.out.println("Reason: " + reason);
@@ -150,9 +159,9 @@ public class Employees {
 
             PreparedStatement pstmt;
             if (choice == 1) {
-                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? AND endDate < CURDATE() LOCK IN SHARE MODE");
+                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments s LEFT JOIN offices o ON s.officeCode = o.officeCode WHERE employeeNumber = ? AND endDate < CURDATE() LOCK IN SHARE MODE");
             } else {
-                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? AND endDate >= CURDATE() LOCK IN SHARE MODE");
+                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments s LEFT JOIN offices o ON s.officeCode = o.officeCode WHERE employeeNumber = ? AND endDate >= CURDATE() LOCK IN SHARE MODE");
             }
             sc.nextLine();
             pstmt.setInt(1, employeeNumber);
@@ -169,8 +178,11 @@ public class Employees {
                 reason = rs.getString("reason");
                 quota = rs.getDouble("quota");
                 salesManagerNumber = rs.getInt("salesManagerNumber");
+                city = rs.getString("city");
+                country = rs.getString("country");
 
                 System.out.println("\nOffice Code: " + officeCode);
+                System.out.println("  |- " + city + ", " + country);
                 System.out.println("Start Date: " + startDate);
                 System.out.println("End Date: " + endDate);
                 System.out.println("Reason: " + reason);
@@ -222,7 +234,15 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees LOCK IN SHARE MODE");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT e.*," +
+                                "       IF(sr.employeeNumber IS NULL, 0, 1) AS isSalesRep," +
+                                "       IF(sm.employeeNumber IS NULL, 0, 1) AS isSalesManager," +
+                                "       IF(im.employeeNumber IS NULL, 0, 1) AS isInventoryManager " +
+                                "FROM employees e " +
+                                "LEFT JOIN salesRepresentatives sr ON e.employeeNumber = sr.employeeNumber " +
+                                "LEFT JOIN Non_SalesRepresentatives ns ON e.employeeNumber = ns.employeeNumber " +
+                                "LEFT JOIN sales_managers sm ON ns.employeeNumber = sm.employeeNumber " +
+                                "LEFT JOIN inventory_managers im ON ns.employeeNumber = im.employeeNumber LOCK IN SHARE MODE");
 
             System.out.println("\nPress enter key to start retrieving the data");
             sc.nextLine();
@@ -236,6 +256,10 @@ public class Employees {
                 email = rs.getString("email");
                 jobTitle = rs.getString("jobTitle");
                 employeeType = rs.getString("employee_type");
+                isDeactivated = rs.getInt("is_deactivated");
+                isSalesRep = rs.getInt("isSalesRep");
+                isSalesManager = rs.getInt("isSalesManager");
+                isInventoryManager = rs.getInt("isInventoryManager");
 
                 System.out.println("\nLast Name: " + lastName);
                 System.out.println("First Name: " + firstName);
@@ -243,6 +267,11 @@ public class Employees {
                 System.out.println("Email: " + email);
                 System.out.println("Job Title: " + jobTitle);
                 System.out.println("Employee Type: " + employeeType);
+                if (isSalesRep == 1) System.out.println("Current Type: Sales Representative");
+                if (isSalesManager == 1) System.out.println("Current Type: Sales Manager");
+                if (isInventoryManager == 1) System.out.println("Current Type: Inventory Manager");
+                System.out.println("Is Deactivated: " + isDeactivated);
+
             }
 
             rs.close(); 
@@ -271,10 +300,21 @@ public class Employees {
                 Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
                 System.out.println("Connection Successful");
                 conn.setAutoCommit(false);
-    
-                PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
+                
+                PreparedStatement pstmt = conn.prepareStatement("SELECT e.*," +
+                                "       IF(sr.employeeNumber IS NULL, 0, 1) AS isSalesRep," +
+                                "       IF(sm.employeeNumber IS NULL, 0, 1) AS isSalesManager," +
+                                "       IF(im.employeeNumber IS NULL, 0, 1) AS isInventoryManager " +
+                                "FROM employees e " +
+                                "LEFT JOIN salesRepresentatives sr ON e.employeeNumber = sr.employeeNumber " +
+                                "LEFT JOIN Non_SalesRepresentatives ns ON e.employeeNumber = ns.employeeNumber " +
+                                "LEFT JOIN sales_managers sm ON ns.employeeNumber = sm.employeeNumber " +
+                                "LEFT JOIN inventory_managers im ON ns.employeeNumber = im.employeeNumber " +
+                                "WHERE e.employeeNumber = ? LOCK IN SHARE MODE");
+
                 pstmt.setInt(1, employeeNumber);
-    
+                
+                sc.nextLine();
                 System.out.println("\nPress enter key to start retrieving the data");
                 sc.nextLine();
     
@@ -287,6 +327,10 @@ public class Employees {
                     email = rs.getString("email");
                     jobTitle = rs.getString("jobTitle");
                     employeeType = rs.getString("employee_type");
+                    isDeactivated = rs.getInt("is_deactivated");
+                    isSalesRep = rs.getInt("isSalesRep");
+                    isSalesManager = rs.getInt("isSalesManager");
+                    isInventoryManager = rs.getInt("isInventoryManager");
                 }
     
                 rs.close(); 
@@ -297,6 +341,10 @@ public class Employees {
                 System.out.println("Email: " + email);
                 System.out.println("Job Title: " + jobTitle);
                 System.out.println("Employee Type: " + employeeType);
+                if (isSalesRep == 1) System.out.println("Current Type: Sales Representative");
+                if (isSalesManager == 1) System.out.println("Current Type: Sales Manager");
+                if (isInventoryManager == 1) System.out.println("Current Type: Inventory Manager");
+                System.out.println("Is Deactivated: " + isDeactivated);
     
                 System.out.println("\nPress enter key to end transaction");
                 sc.nextLine();
