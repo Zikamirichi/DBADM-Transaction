@@ -231,6 +231,11 @@ public class Employees {
         quota = sc.nextDouble();
         System.out.println("Enter Sales Manager Number:");
         salesManagerNumber = sc.nextInt();
+        System.out.println("Enter End Username: ");
+        end_username = sc.nextLine();
+        System.out.println("Enter End User Reason: ");
+        end_userreason = sc.nextLine();
+
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
@@ -255,7 +260,7 @@ public class Employees {
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("INSERT INTO salesRepAssignments(employeeNumber, officeCode, startDate, endDate, reason, quota, salesManagerNumber) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO salesRepAssignments(employeeNumber, officeCode, startDate, endDate, reason, quota, salesManagerNumber, end_username, end_userreason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setInt(1, employeeNumber);
             pstmt.setString(2, officeCode);
             pstmt.setString(3, startDate);
@@ -263,8 +268,9 @@ public class Employees {
             pstmt.setString(5, reason);
             pstmt.setDouble(6, quota);
             pstmt.setInt(7, salesManagerNumber);
+            pstmt.setString(8, end_username);
+            pstmt.setString(9, end_userreason);
 
-            sc.nextLine();
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
 
@@ -307,6 +313,8 @@ public class Employees {
                 salesManagerNumber = rs.getInt("salesManagerNumber");
                 city = rs.getString("city");
                 country = rs.getString("country");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
 
                 System.out.println("\nOffice Code: " + officeCode);
                 System.out.println("  |- " + city + ", " + country);
@@ -315,6 +323,8 @@ public class Employees {
                 System.out.println("Reason: " + reason);
                 System.out.println("Quota: " + quota);
                 System.out.println("Sales Manager Number: " + salesManagerNumber);
+                System.out.println("End Username: " + end_username);
+                System.out.println("End User Reason: " + end_userreason);
             }
             rs.close();
 
@@ -370,6 +380,8 @@ public class Employees {
                 salesManagerNumber = rs.getInt("salesManagerNumber");
                 city = rs.getString("city");
                 country = rs.getString("country");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
 
                 System.out.println("\nOffice Code: " + officeCode);
                 System.out.println("  |- " + city + ", " + country);
@@ -378,6 +390,8 @@ public class Employees {
                 System.out.println("Reason: " + reason);
                 System.out.println("Quota: " + quota);
                 System.out.println("Sales Manager Number: " + salesManagerNumber);
+                System.out.println("End Username: " + end_username);
+                System.out.println("End User Reason: " + end_userreason);
             }
             rs.close();
 
@@ -450,6 +464,8 @@ public class Employees {
                 isSalesRep = rs.getInt("isSalesRep");
                 isSalesManager = rs.getInt("isSalesManager");
                 isInventoryManager = rs.getInt("isInventoryManager");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
 
                 System.out.println("\nLast Name: " + lastName);
                 System.out.println("First Name: " + firstName);
@@ -461,6 +477,8 @@ public class Employees {
                 if (isSalesManager == 1) System.out.println("Current Type: Sales Manager");
                 if (isInventoryManager == 1) System.out.println("Current Type: Inventory Manager");
                 System.out.println("Is Deactivated: " + isDeactivated);
+                System.out.println("End Username: " + end_username);
+                System.out.println("End User Reason: " + end_userreason);
 
             }
 
@@ -521,6 +539,8 @@ public class Employees {
                     isSalesRep = rs.getInt("isSalesRep");
                     isSalesManager = rs.getInt("isSalesManager");
                     isInventoryManager = rs.getInt("isInventoryManager");
+                    end_username = rs.getString("end_username");
+                    end_userreason = rs.getString("end_userreason");
                 }
     
                 rs.close(); 
@@ -535,6 +555,9 @@ public class Employees {
                 if (isSalesManager == 1) System.out.println("Current Type: Sales Manager");
                 if (isInventoryManager == 1) System.out.println("Current Type: Inventory Manager");
                 System.out.println("Is Deactivated: " + isDeactivated);
+                System.out.println("End Username: " + end_username);
+                System.out.println("End User Reason: " + end_userreason);
+                
     
                 System.out.println("\nPress enter key to end transaction");
                 sc.nextLine();
@@ -574,6 +597,12 @@ public class Employees {
         System.out.println("Enter New Department Manager Number:");
         deptManagerNumber = sc.nextInt();
 
+        System.out.println("Enter End Username:");
+        end_username = sc.nextLine();
+
+        System.out.println("Enter End User Reason:");
+        end_userreason = sc.nextLine();
+
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
             System.out.println("Connection Successful");
@@ -592,11 +621,12 @@ public class Employees {
             pstmt.setInt(1, deptCode);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("UPDATE departments SET deptManagerNumber = ? WHERE deptCode = ?");
+            pstmt = conn.prepareStatement("UPDATE departments SET deptManagerNumber = ?, end_username = ?, end_userreason = ? WHERE deptCode = ?");
             pstmt.setInt(1, deptManagerNumber);
-            pstmt.setInt(2, deptCode);
+            pstmt.setString(2, end_username);
+            pstmt.setString(3, end_userreason);
+            pstmt.setInt(4, deptCode);
 
-            sc.nextLine();
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
 
@@ -635,10 +665,14 @@ public class Employees {
                 deptCode = rs.getInt("deptCode");
                 deptName = rs.getString("deptName");
                 deptManagerNumber = rs.getInt("deptManagerNumber");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
 
                 System.out.println("\nDepartment Code: " + deptCode);
                 System.out.println("Department Name: " + deptName);
                 System.out.println("Department Manager Number: " + deptManagerNumber);
+                System.out.println("End Username: " + end_username);
+                System.out.println("End User Reason: " + end_userreason);
             }
 
             rs.close();
@@ -679,13 +713,18 @@ public class Employees {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
+                deptCode = rs.getInt("deptCode");
                 deptName = rs.getString("deptName");
                 deptManagerNumber = rs.getInt("deptManagerNumber");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
             }
 
             System.out.println("\nDepartment Code: " + deptCode);
             System.out.println("Department Name: " + deptName);
             System.out.println("Department Manager Number: " + deptManagerNumber);
+            System.out.println("End Username: " + end_username);
+            System.out.println("End User Reason: " + end_userreason);
 
             rs.close();
 
