@@ -16,6 +16,7 @@ public class Employees {
     int isSalesRep;
     int isSalesManager;
     int isInventoryManager;
+
     String officeCode;
     String startDate;
     String endDate;
@@ -25,6 +26,9 @@ public class Employees {
     String city;
     String country;
 
+    int deptCode;
+    String deptName;
+    int deptManagerNumber;
 
     public Employees() {}
     
@@ -132,7 +136,25 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO salesRepAssignments(employeeNumber, officeCode, startDate, endDate, reason, quota, salesManagerNumber) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            // lock to prevent manager from being deactivated
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE employeeNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, salesManagerNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, salesManagerNumber);
+            pstmt.executeQuery();
+
+            // lock to prevent sales rep from being deactivated
+            pstmt = conn.prepareStatement("SELECT * FROM salesRepresentatives WHERE employeeNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("INSERT INTO salesRepAssignments(employeeNumber, officeCode, startDate, endDate, reason, quota, salesManagerNumber) VALUES (?, ?, ?, ?, ?, ?, ?)");
             pstmt.setInt(1, employeeNumber);
             pstmt.setString(2, officeCode);
             pstmt.setString(3, startDate);
@@ -441,14 +463,170 @@ public class Employees {
 
         return 0;
     }
-    
+
+    public int assignDepartmentManager() {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Enter Department Code:");
+        deptCode = sc.nextInt();
+
+        System.out.println("Enter New Department Manager Number:");
+        deptManagerNumber = sc.nextInt();
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            // lock to prevent manager from being deactivated
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, deptManagerNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, deptManagerNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM departments WHERE deptCode = ? FOR UPDATE");
+            pstmt.setInt(1, deptCode);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("UPDATE departments SET deptManagerNumber = ? WHERE deptCode = ?");
+            pstmt.setInt(1, deptManagerNumber);
+            pstmt.setInt(2, deptCode);
+
+            sc.nextLine();
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
+            pstmt.executeUpdate();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
+    private int getAllDepartmentManagerRecords() {
+        Scanner sc = new Scanner(System.in);
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM departments LOCK IN SHARE MODE");
+
+            System.out.println("\nPress enter key to start retrieving the data");
+            sc.nextLine();
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                deptCode = rs.getInt("deptCode");
+                deptName = rs.getString("deptName");
+                deptManagerNumber = rs.getInt("deptManagerNumber");
+
+                System.out.println("\nDepartment Code: " + deptCode);
+                System.out.println("Department Name: " + deptName);
+                System.out.println("Department Manager Number: " + deptManagerNumber);
+            }
+
+            rs.close();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+        
+    }
+
+    private int getSpecificDepartmentManagerRecord() {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Enter Department Code:");
+        deptCode = sc.nextInt();
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM departments WHERE deptCode = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, deptCode);
+
+            sc.nextLine();
+            System.out.println("\nPress enter key to start retrieving the data");
+            sc.nextLine();
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                deptName = rs.getString("deptName");
+                deptManagerNumber = rs.getInt("deptManagerNumber");
+            }
+
+            System.out.println("\nDepartment Code: " + deptCode);
+            System.out.println("Department Name: " + deptName);
+            System.out.println("Department Manager Number: " + deptManagerNumber);
+
+            rs.close();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getDepartmentManagerInfo() {
+        Scanner sc = new Scanner(System.in);
+        int choice = 0;
+        System.out.println("\n[1] Get all records  [2] Get specific record");
+        
+        choice = sc.nextInt();
+
+        if (choice == 1) 
+            return getAllDepartmentManagerRecords();
+
+        if (choice == 2)
+            return getSpecificDepartmentManagerRecord();
+
+        return 0;
+    }
+
     public static void main (String args[]) {
         Scanner sc     = new Scanner (System.in);
         int     choice = 0;
         // Letting the use choose between the two functions
         System.out.println("Enter [1] Create Employee  [2] Reclassify Employee \n" +
         "[3] Resign Employee  [4] Create Sales Rep Assignments \n" + 
-        "[5] Get Sales Rep Assignments Info  [6] Get Employee Info: ");
+        "[5] Get Sales Rep Assignments Info  [6] Get Employee Info \n"+
+        "[7] Assign Department Manager [8] Get Department Manager Info\n" +
+        "[9] Update Supervising Manager");
         choice = sc.nextInt();
         Employees e = new Employees();
         if (choice==1) e.createEmployee();
@@ -457,6 +635,9 @@ public class Employees {
         if (choice==4) e.createSalesRepAssignments();
         if (choice==5) e.getSalesRepAssignmentsInfo();
         if (choice==6) e.getEmployeeInfo();
+        if (choice==7) e.assignDepartmentManager();
+        if (choice==8) e.getDepartmentManagerInfo();
+
         
         System.out.println("Press enter key to continue....");
         sc.nextLine();
