@@ -94,13 +94,6 @@ public class Sales {
         }
     }
     public int recordProductsOrdered() {
-        /**
-         * String productCode;
-         *     String quantityOrdered;
-         *     String priceEach;
-         *     String orderLineNumber;
-         *     String referenceNo;
-         */
         Scanner sc = new Scanner(System.in);
 
         System.out.println("Enter Order Number:");
@@ -175,13 +168,6 @@ public class Sales {
 
 
             while (rs.next()) {
-                /**
-                 * String productCode;
-                 *     String quantityOrdered;
-                 *     String priceEach;
-                 *     String orderLineNumber;
-                 *     String referenceNo;
-                 */
                 orderDate = rs.getString("orderDate");
                 requiredDate = rs.getString("requiredDate");
                 shippedDate = rs.getString("shippedDate");
@@ -267,13 +253,6 @@ public class Sales {
 
 
             while (rs.next()) {
-                /**
-                 * String productCode;
-                 *     String quantityOrdered;
-                 *     String priceEach;
-                 *     String orderLineNumber;
-                 *     String referenceNo;
-                 */
                 productCode = rs.getString("productCode");
                 quantityOrdered = rs.getInt("quantityOrdered");
                 priceEach = rs.getDouble("priceEach");
@@ -365,13 +344,6 @@ public class Sales {
             Sales temp;
 
             while (rs.next()) {
-                /**
-                 * String productCode;
-                 *     String quantityOrdered;
-                 *     String priceEach;
-                 *     String orderLineNumber;
-                 *     String referenceNo;
-                 */
                 if (flag) {
                     orderDate = rs.getString("orderDate");
                     requiredDate = rs.getString("requiredDate");
@@ -447,8 +419,7 @@ public class Sales {
             conn.setAutoCommit(false);
 
             PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT getPrice(?, 'MIN') AS minPrice, " +
-                            "getPrice(?, 'MAX') AS maxPrice LOCK IN SHARE MODE ");
+                    "SELECT getPrice(?, 'MIN') AS minPrice, getPrice(?, 'MAX') AS maxPrice LOCK IN SHARE MODE ");
 
             pstmt.setString(1, productCode);
             pstmt.setString(2, productCode);
@@ -462,13 +433,6 @@ public class Sales {
 
 
             while (rs.next()) {
-                /**
-                 * String productCode;
-                 *     String quantityOrdered;
-                 *     String priceEach;
-                 *     String orderLineNumber;
-                 *     String referenceNo;
-                 */
                 minPrice = rs.getDouble("minPrice");
                 maxPrice = rs.getDouble("maxPrice");
 
@@ -497,16 +461,6 @@ public class Sales {
             return 0;
         }
     }
-
-    /**
-     * (Sales module) -- CARLOS
-     * Create an order
-     * Update order products
-     * Update order itself (cancel ship eme)
-     * Record products ordered
-     * View product together with allowable pricing
-     * View entire order
-     */
 
     public static void main (String args[]) {
         Scanner sc     = new Scanner (System.in);
