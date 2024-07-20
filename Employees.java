@@ -147,7 +147,7 @@ public class Employees {
             System.out.println("Enter your reason:");
             end_userreason = sc.nextLine();
 
-            // Close resources for job titles retrieval
+            // Close resources for job titles and dept code retrieval
             jobTitlesRs.close();
             jobTitlesStmt.close();
             jobTitleRs.close();
@@ -157,7 +157,7 @@ public class Employees {
             deptCodeRs.close();
             deptCodeStmt.close();
 
-            // Execute INSERT operation using a stored procedure
+            //Stored procedure has lock
             PreparedStatement insertStmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             insertStmt.setString(1, lastName);
             insertStmt.setString(2, firstName);
@@ -176,7 +176,7 @@ public class Employees {
 
             System.out.println("\nEmployee record created successfully.");
             System.out.println("\nPress enter key to end transaction");
-            sc.nextLine(); // Wait for user confirmation
+            sc.nextLine();
 
             // Commit transaction
             conn.commit();
@@ -185,12 +185,11 @@ public class Employees {
             insertStmt.close();
             conn.close();
 
-            return 1; // Success
+            return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
 
             try {
-                // Rollback transaction on error
                 conn.rollback();
             } catch (SQLException rollbackEx) {
                 System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
