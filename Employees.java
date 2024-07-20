@@ -202,15 +202,74 @@ public class Employees {
 
     public int reclassifyEmployee() {
         // getEmployeeType (add read lock)
-        // check ReassignSalesRep1
+        // check SalesRepReassignment
+        // troubles with puting lock in the procedure because of syntax
         return 1;
     }
 
     public int resignEmployee() {
-        // getEmployeeEmployeeNum (Read Lock)
-        //deactivateEmployee procedure - WRITE LOCK
+        // getEmployeeNum (Read Lock) --- not done, where is this
+        // isDeactivated function -- read lock employees table in java or db (?)
+        // deactivateEmployee procedure - WRITE LOCK on employees, and salesRepAssignments
+        // for delete in records, i lock in java because there are instances that the employeeNumber is not in the said table
 
-        return 1;
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter Employee Number:");
+        employeeNumber = sc.nextInt();
+        sc.nextLine();
+        System.out.println("Enter End Username: ");
+        end_username = sc.nextLine();
+        System.out.println("Enter End User Reason: ");
+        end_userreason = sc.nextLine();
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=DLSU.1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            PreparedStatement pstmt = conn.prepareStatement("CALL deactivateEmployee(?, ?, ?)");
+            pstmt.setInt(1, employeeNumber);
+            insertStmt.setString(2, end_username);
+            insertStmt.setString(3, end_userreason);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, salesManagerNumber);
+            pstmt.executeQuery();
+
+            // lock to prevent sales rep from being deactivated
+            pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM salesRepresentatives WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
+            pstmt.executeUpdate();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+        
     }
 
     public int createSalesRepAssignments() {
