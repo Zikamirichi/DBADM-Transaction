@@ -8,13 +8,16 @@ public class Employees {
     String extension;
     String email;
     String jobTitle;
-    String employeeType;  
+    String employeeType;
+    int isDeactivated;
     String officeCode;
     String startDate;
     String endDate;
     String reason;
     Double quota;
     int salesManagerNumber;      
+    String city;
+    String country;
 
     public Employees() {}
     
@@ -88,7 +91,7 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments LOCK IN SHARE MODE");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments s LEFT JOIN offices o ON s.officeCode = o.officeCode LOCK IN SHARE MODE");
             
             System.out.println("\nPress enter key to start retrieving the data");
             sc.nextLine();
@@ -102,8 +105,11 @@ public class Employees {
                 reason = rs.getString("reason");
                 quota = rs.getDouble("quota");
                 salesManagerNumber = rs.getInt("salesManagerNumber");
+                city = rs.getString("city");
+                country = rs.getString("country");
 
                 System.out.println("\nOffice Code: " + officeCode);
+                System.out.println("  |- " + city + ", " + country);
                 System.out.println("Start Date: " + startDate);
                 System.out.println("End Date: " + endDate);
                 System.out.println("Reason: " + reason);
@@ -143,9 +149,9 @@ public class Employees {
 
             PreparedStatement pstmt;
             if (choice == 1) {
-                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? AND endDate < CURDATE() LOCK IN SHARE MODE");
+                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments s LEFT JOIN offices o ON s.officeCode = o.officeCode WHERE employeeNumber = ? AND endDate < CURDATE() LOCK IN SHARE MODE");
             } else {
-                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? AND endDate >= CURDATE() LOCK IN SHARE MODE");
+                pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments s LEFT JOIN offices o ON s.officeCode = o.officeCode WHERE employeeNumber = ? AND endDate >= CURDATE() LOCK IN SHARE MODE");
             }
             sc.nextLine();
             pstmt.setInt(1, employeeNumber);
@@ -162,8 +168,11 @@ public class Employees {
                 reason = rs.getString("reason");
                 quota = rs.getDouble("quota");
                 salesManagerNumber = rs.getInt("salesManagerNumber");
+                city = rs.getString("city");
+                country = rs.getString("country");
 
                 System.out.println("\nOffice Code: " + officeCode);
+                System.out.println("  |- " + city + ", " + country);
                 System.out.println("Start Date: " + startDate);
                 System.out.println("End Date: " + endDate);
                 System.out.println("Reason: " + reason);
@@ -229,6 +238,7 @@ public class Employees {
                 email = rs.getString("email");
                 jobTitle = rs.getString("jobTitle");
                 employeeType = rs.getString("employee_type");
+                isDeactivated = rs.getInt("is_deactivated");
 
                 System.out.println("\nLast Name: " + lastName);
                 System.out.println("First Name: " + firstName);
@@ -236,6 +246,8 @@ public class Employees {
                 System.out.println("Email: " + email);
                 System.out.println("Job Title: " + jobTitle);
                 System.out.println("Employee Type: " + employeeType);
+                System.out.println("Is Deactivated: " + isDeactivated);
+
             }
 
             rs.close(); 
@@ -267,7 +279,8 @@ public class Employees {
     
                 PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
                 pstmt.setInt(1, employeeNumber);
-    
+                
+                sc.nextLine();
                 System.out.println("\nPress enter key to start retrieving the data");
                 sc.nextLine();
     
@@ -280,6 +293,7 @@ public class Employees {
                     email = rs.getString("email");
                     jobTitle = rs.getString("jobTitle");
                     employeeType = rs.getString("employee_type");
+                    isDeactivated = rs.getInt("is_deactivated");
                 }
     
                 rs.close(); 
@@ -290,6 +304,7 @@ public class Employees {
                 System.out.println("Email: " + email);
                 System.out.println("Job Title: " + jobTitle);
                 System.out.println("Employee Type: " + employeeType);
+                System.out.println("Is Deactivated: " + isDeactivated);
     
                 System.out.println("\nPress enter key to end transaction");
                 sc.nextLine();
