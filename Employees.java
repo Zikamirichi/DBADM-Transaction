@@ -9,6 +9,9 @@ public class Employees {
     String email;
     String jobTitle;
     String employeeType;
+    int deptCode;
+    String end_username;
+    String end_userreason;
     int isDeactivated;
     int isSalesRep;
     int isSalesManager;
@@ -22,13 +25,77 @@ public class Employees {
     String city;
     String country;
 
+
     public Employees() {}
     
     public int createEmployee() {
-        // WRITE lock on procedure (modify)
-        // ideally, have write lock on trigger for before insert (before SELECT MAX(employeeNumber) INTO lastNumber FROM employees_audit;)
-        return 1;
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter Last Name:");
+        lastName = sc.nextLine();
+        sc.nextLine();
+
+        System.out.println("Enter First Name:");
+        firstName = sc.nextLine();
+
+        System.out.println("Enter extension:");
+        extension = sc.nextLine();
+
+        System.out.println("Enter email:");
+        email = sc.nextLine();
+
+        System.out.println("Select a Job Title:");
+        // make a multiple choice
+        // get from employees_jobtitles
+        jobTitle = sc.nextLine();
+        System.out.println("Enter employee type:");
+        // choose from S or N
+        employeeType = sc.nextLine();
+        System.out.println("Enter department code:");
+        employeeType = sc.nextLine();
+        System.out.println("Enter your username:");
+        employeeType = sc.nextLine();
+        System.out.println("Enter your reason:");
+        employeeType = sc.nextLine();
+        
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            PreparedStatement pstmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt.setString(1, lastName);
+            pstmt.setString(2, firstName);
+            pstmt.setString(3, extension);
+            pstmt.setString(4, email);
+            pstmt.setString(5, jobTitle);
+            pstmt.setString(6, employeeType);
+            pstmt.setInt(7, deptCode);
+            pstmt.setString(8, end_username);
+            pstmt.setString(9, end_userreason);
+
+            sc.nextLine();
+            System.out.println("\nPress enter key to start creating an employee record");
+            sc.nextLine();
+
+            pstmt.executeUpdate();
+
+            System.out.println("\nEmployee record created successfully.");
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println("Error creating employee: " + e.getMessage());
+            return 0;
+        }
     }
+
+
     public int reclassifyEmployee() {
         // getEmployeeType (add read lock)
         // check ReassignSalesRep1
