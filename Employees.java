@@ -9,7 +9,6 @@ public class Employees {
     String email;
     String jobTitle;
     String employeeType;
-    int deptCode;
     String end_username;
     String end_userreason;
     int isDeactivated;
