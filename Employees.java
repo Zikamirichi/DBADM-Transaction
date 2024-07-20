@@ -212,33 +212,57 @@ public class Employees {
         // isDeactivated function -- read lock employees table in java or db (?)
         // deactivateEmployee procedure - WRITE LOCK on employees, and salesRepAssignments
         // for delete in records, i lock in java because there are instances that the employeeNumber is not in the said table
-
+        // i used for update in tables that should be deleted
 
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Employee Number:");
-        employeeNumber = sc.nextInt();
-        sc.nextLine();
-        System.out.println("Enter End Username: ");
-        end_username = sc.nextLine();
-        System.out.println("Enter End User Reason: ");
-        end_userreason = sc.nextLine();
+        int employeeNumber = 0;
+        boolean employeeExists = false;
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=DLSU.1234!");
-            System.out.println("Connection Successful");
+            
+            while (true) {
+                System.out.println("Enter Employee Number:");
+                employeeNumber = sc.nextInt();
+                sc.nextLine(); 
+                
+                // Check if employeeNumber exists in employees table
+                PreparedStatement pstmt = conn.prepareStatement("SELECT 1 FROM employees WHERE employeeNumber = ? FOR UPDATE");
+                pstmt.setInt(1, employeeNumber);
+                ResultSet rs = pstmt.executeQuery();
+                
+                if (rs.next()) {
+                    employeeExists = true;
+                    break;
+                } else {
+                    System.out.println("Error: Employee Number does not exist. Please try again.");
+                }
+                
+                rs.close();
+                pstmt.close();
+            }
+
+            System.out.println("Enter End Username:");
+            end_username = sc.nextLine();
+
+            System.out.println("Enter End User Reason:");
+            end_userreason = sc.nextLine();
+
+        
             conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement("CALL deactivateEmployee(?, ?, ?)");
+            CallableStatement cstmt = conn.prepareCall("CALL deactivateEmployee(?, ?, ?)");
+            cstmt.setInt(1, employeeNumber);
+            cstmt.setString(2, end_username);
+            cstmt.setString(3, end_userreason);
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+            cstmt.executeUpdate();
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
-            insertStmt.setString(2, end_username);
-            insertStmt.setString(3, end_userreason);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
-            pstmt.setInt(1, salesManagerNumber);
-            pstmt.executeQuery();
-
-            // lock to prevent sales rep from being deactivated
             pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
@@ -251,23 +275,23 @@ public class Employees {
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
 
+            
 
-            System.out.println("\nPress enter key to start transaction");
-            sc.nextLine();
-
-            pstmt.executeUpdate();
-
-            System.out.println("\nPress enter key to end transaction");
-            sc.nextLine();
+            conn.commit();
 
             pstmt.close();
-            conn.commit();
+            cstmt.close();
             conn.close();
 
-            return 1;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return 0;
+            System.out.println("Employee record has been updated successfully.");
+            System.out.println("\nPress enter key to end transaction");
+
+            return 1; // Success
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0; 
+        } finally {
+            sc.close(); 
         }
         
     }
