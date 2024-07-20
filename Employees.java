@@ -19,13 +19,20 @@ public class Employees {
     public Employees() {}
     
     public int createEmployee() {
+        // WRITE lock on procedure (modify)
+        // ideally, have write lock on trigger for before insert (before SELECT MAX(employeeNumber) INTO lastNumber FROM employees_audit;)
         return 1;
     }
     public int reclassifyEmployee() {
+        // getEmployeeType (add read lock)
+        // check ReassignSalesRep1
         return 1;
     }
 
     public int resignEmployee() {
+        // getEmployeeEmployeeNum (Read Lock)
+        //deactivateEmployee procedure - WRITE LOCK
+
         return 1;
     }
 
