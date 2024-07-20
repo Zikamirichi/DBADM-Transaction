@@ -33,69 +33,171 @@ public class Employees {
     
     public int createEmployee() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Last Name:");
-        lastName = sc.nextLine();
-        sc.nextLine();
-
-        System.out.println("Enter First Name:");
-        firstName = sc.nextLine();
-
-        System.out.println("Enter extension:");
-        extension = sc.nextLine();
-
-        System.out.println("Enter email:");
-        email = sc.nextLine();
-
-        System.out.println("Select a Job Title:");
-        // make a multiple choice
-        // get from employees_jobtitles
-        jobTitle = sc.nextLine();
-        System.out.println("Enter employee type:");
-        // choose from S or N
-        employeeType = sc.nextLine();
-        System.out.println("Enter department code:");
-        employeeType = sc.nextLine();
-        System.out.println("Enter your username:");
-        employeeType = sc.nextLine();
-        System.out.println("Enter your reason:");
-        employeeType = sc.nextLine();
-        
+        Connection conn = null;
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
-            System.out.println("Connection Successful");
+            // Establish database connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=DLSU.1234!");
             conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            pstmt.setString(1, lastName);
-            pstmt.setString(2, firstName);
-            pstmt.setString(3, extension);
-            pstmt.setString(4, email);
-            pstmt.setString(5, jobTitle);
-            pstmt.setString(6, employeeType);
-            pstmt.setInt(7, deptCode);
-            pstmt.setString(8, end_username);
-            pstmt.setString(9, end_userreason);
+            System.out.println("Enter Last Name:");
+            lastName = sc.nextLine();
 
+            System.out.println("Enter First Name:");
+            firstName = sc.nextLine();
+
+            System.out.println("Enter extension:");
+            extension = sc.nextLine();
+
+            System.out.println("Enter email:");
+            email = sc.nextLine();
+
+            // Fetch job titles from database
+            System.out.println("Select a Job Title:");
+            String jobTitlesQuery = "SELECT jobTitle FROM employees_jobtitles";
+            PreparedStatement jobTitlesStmt = conn.prepareStatement(jobTitlesQuery);
+            ResultSet jobTitlesRs = jobTitlesStmt.executeQuery();
+
+            int optionCount = 1;
+            while (jobTitlesRs.next()) {
+                String title = jobTitlesRs.getString("jobTitle");
+                System.out.println("[" + optionCount + "] " + title);
+                optionCount++;
+            }
+
+            System.out.println("Enter the number of the job title:");
+            int choice = sc.nextInt();
             sc.nextLine();
+
+            // Retrieve selected job title based on user's choice
+            PreparedStatement jobTitleStmt = conn.prepareStatement("SELECT jobTitle FROM employees_jobtitles LIMIT ?, 1");
+            jobTitleStmt.setInt(1, choice - 1); //SQL is 0 based index
+            ResultSet jobTitleRs = jobTitleStmt.executeQuery();
+
+            if (jobTitleRs.next()) {
+                jobTitle = jobTitleRs.getString("jobTitle");
+            } else {
+                throw new SQLException("Invalid choice. No such job title found.");
+            }
+            // end for job title
+            
+
+            System.out.println("Select Employee Type:");
+            System.out.println("[1] Sales Representative");
+            System.out.println("[2] Sales Manager");
+            System.out.println("[3] Inventory Manager");
+
+            boolean validChoice = false;
+            int typeChoice = 0;
+            while (!validChoice) {
+                typeChoice = sc.nextInt();
+                sc.nextLine(); 
+
+                switch (typeChoice) {
+                    case 1:
+                        employeeType = "Sales Representative";
+                        validChoice = true;
+                        break;
+                    case 2:
+                        employeeType = "Sales Manager"; 
+                        validChoice = true;
+                        break;
+                    case 3:
+                        employeeType = "Inventory Manager";
+                        validChoice = true;
+                        break;
+                    default:
+                        System.out.println("Invalid input. Please select a valid option.");
+                        break;
+                }
+            }
+
+
+            // Fetch department codes from database
+            System.out.println("Select Department Code:");
+            String deptCodesQuery = "SELECT deptCode FROM departments ORDER BY deptCode ASC";
+            PreparedStatement deptCodesStmt = conn.prepareStatement(deptCodesQuery);
+            ResultSet deptCodesRs = deptCodesStmt.executeQuery();
+
+            optionCount = 1;
+            while (deptCodesRs.next()) {
+                int code = deptCodesRs.getInt("deptCode");
+                System.out.println("[" + optionCount + "] " + code);
+                optionCount++;
+            }
+
+            System.out.println("Enter the number of the department code:");
+            choice = sc.nextInt();
+            sc.nextLine();
+
+            PreparedStatement deptCodeStmt = conn.prepareStatement("SELECT DISTINCT deptCode FROM departments LIMIT ?, 1");
+            deptCodeStmt.setInt(1, choice - 1); // Adjust for 0-based index in SQL
+            ResultSet deptCodeRs = deptCodeStmt.executeQuery();
+
+            if (deptCodeRs.next()) {
+                deptCode = deptCodeRs.getInt("deptCode");
+            } else {
+                throw new SQLException("Invalid choice. No such department code found.");
+            }
+            // end for department code
+
+            System.out.println("Enter your username:");
+            end_username = sc.nextLine();
+
+            System.out.println("Enter your reason:");
+            end_userreason = sc.nextLine();
+
+            // Close resources for job titles retrieval
+            jobTitlesRs.close();
+            jobTitlesStmt.close();
+            jobTitleRs.close();
+            jobTitleStmt.close();
+            deptCodesRs.close();
+            deptCodesStmt.close();
+            deptCodeRs.close();
+            deptCodeStmt.close();
+
+            // Execute INSERT operation using a stored procedure
+            PreparedStatement insertStmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            insertStmt.setString(1, lastName);
+            insertStmt.setString(2, firstName);
+            insertStmt.setString(3, extension);
+            insertStmt.setString(4, email);
+            insertStmt.setString(5, jobTitle);
+            insertStmt.setString(6, employeeType);
+            insertStmt.setInt(7, deptCode);
+            insertStmt.setString(8, end_username);
+            insertStmt.setString(9, end_userreason);
+
             System.out.println("\nPress enter key to start creating an employee record");
             sc.nextLine();
 
-            pstmt.executeUpdate();
+            insertStmt.executeUpdate();
 
             System.out.println("\nEmployee record created successfully.");
             System.out.println("\nPress enter key to end transaction");
-            sc.nextLine();
+            sc.nextLine(); // Wait for user confirmation
 
-            pstmt.close();
+            // Commit transaction
             conn.commit();
+
+            // Close resources
+            insertStmt.close();
             conn.close();
 
-            return 1;
-        } catch (Exception e) {
-            System.out.println("Error creating employee: " + e.getMessage());
-            return 0;
-        }
+            return 1; // Success
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+
+            try {
+                // Rollback transaction on error
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
+
+                return 0; 
+            }
     }
 
 
@@ -621,10 +723,10 @@ public class Employees {
         Scanner sc     = new Scanner (System.in);
         int     choice = 0;
         // Letting the use choose between the two functions
-        System.out.println("Enter [1] Create Employee  [2] Reclassify Employee \n" +
-        "[3] Resign Employee  [4] Create Sales Rep Assignments \n" + 
-        "[5] Get Sales Rep Assignments Info  [6] Get Employee Info \n"+
-        "[7] Assign Department Manager [8] Get Department Manager Info\n" +
+        System.out.println("\nEnter the number of your choice:\n[1] Create Employee\n[2] Reclassify Employee\n" +
+        "[3] Resign Employee\n[4] Create Sales Rep Assignments\n" + 
+        "[5] Get Sales Rep Assignments Info\n[6] Get Employee Info \n"+
+        "[7] Assign Department Manager\n[8] Get Department Manager Info\n" +
         "[9] Update Supervising Manager");
         choice = sc.nextInt();
         Employees e = new Employees();
