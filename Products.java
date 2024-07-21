@@ -336,7 +336,7 @@ public class Products {
         int choice = 0;
 
         System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
-                "[3] Update Product\n[4] View Products with Price Range MSRP");
+                "[3] Update Product\n[4] View a Product with its MSRP Price Range");
         choice = sc.nextInt();
         Products p = new Products();
 
