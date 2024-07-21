@@ -146,7 +146,87 @@ DELIMITER ;
 
 -- for (insert function) in java
 
+
 -- For Product Management Module
+-- Stored Procedure (add_product; Write Lock)
+
+USE `dbsalesv2.5g208`;
+DROP procedure IF EXISTS `add_product`;
+
+USE `dbsalesv2.5g208`;
+DROP procedure IF EXISTS `dbsalesv2.5g208`.`add_product`;
+;
+
+DELIMITER $$
+USE `dbsalesv2.5g208`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_product`(
+    IN v_productCode        VARCHAR(15), 
+    IN v_productName        VARCHAR(70), 
+    IN v_productScale       VARCHAR(10), 
+    IN v_productVendor      VARCHAR(50), 
+    IN v_productDescription TEXT, 
+    IN v_buyprice           DOUBLE, 
+    IN v_productType        ENUM('R', 'W'), 
+    IN v_quantityInStock    SMALLINT, 
+    IN v_MSRP               DECIMAL(9,2),
+    IN v_productLine        VARCHAR(50),
+    IN v_end_username       VARCHAR(45),
+    IN v_end_userreason     VARCHAR(45)
+)
+BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    
+    -- Lock the row to ensure it cannot be modified by other transactions
+    SELECT * FROM products WHERE productCode = v_productCode FOR UPDATE;
+    SELECT * FROM current_products WHERE productCode = v_productCode FOR UPDATE;
+    
+    -- Insert into products table
+    INSERT INTO products (productCode, productName, productScale, productVendor, productDescription, buyPrice, productStatus, createdBy, createdReason) 
+    VALUES (v_productCode, v_productName, v_productScale, v_productVendor, v_productDescription, v_buyprice, 'C', v_end_username, v_end_userreason);
+    
+    -- Insert into current_products table
+    INSERT INTO current_products (productCode, productType, quantityInStock, createdBy, createdReason) 
+    VALUES (v_productCode, v_productType, v_quantityInStock, v_end_username, v_end_userreason);
+    
+    IF (v_productType = 'R') THEN
+        -- Insert into product_retail table
+        INSERT INTO product_retail (productCode, createdBy, createdReason) 
+        VALUES (v_productCode, v_end_username, v_end_userreason);
+        
+        -- Insert into product_pricing table
+        INSERT INTO product_pricing (productCode, startDate, endDate, MSRP, createdBy, createdReason) 
+        VALUES (v_productCode, DATE(NOW()), DATE_ADD(NOW(), INTERVAL 7 DAY), v_MSRP, v_end_username, v_end_userreason);
+    ELSE
+        -- Insert into product_wholesale table
+        INSERT INTO product_wholesale (productCode, MSRP, createdBy, createdReason) 
+        VALUES (v_productCode, v_MSRP, v_end_username, v_end_userreason);
+    END IF;
+    
+    IF (NOT isProductLineExist(v_productLine) AND v_productLine != '') THEN
+        -- Insert into productlines table
+        INSERT INTO productlines (productLine, textDescription, htmlDescription, image, createdBy, createdReason) 
+        VALUES (v_productLine, NULL, NULL, NULL, v_end_username, 'Added from add_products');
+    END IF;
+    
+    -- Insert into product_productlines table
+    INSERT INTO product_productlines (productCode, productLine, createdBy, createdReason) 
+    VALUES (v_productCode, v_productLine, v_end_username, v_end_userreason);
+    
+    COMMIT;
+    
+    
+END$$
+
+DELIMITER ;
+;
+
+
 
 -- For Sales Order Module
 
