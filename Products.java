@@ -274,31 +274,45 @@ public class Products {
             productCode = sc.nextLine();
     
             PreparedStatement selectStmt = conn.prepareStatement(
-                "SELECT productName FROM products WHERE productCode = ? LOCK IN SHARE MODE");
+                "SELECT p.productName, cp.product_type FROM products p JOIN current_products cp ON p.productCode = cp.productCode WHERE p.productCode = ? LOCK IN SHARE MODE");
             selectStmt.setString(1, productCode);
     
             ResultSet rs = selectStmt.executeQuery();
     
             if (rs.next()) {
                 productName = rs.getString("productName");
+                productType = rs.getString("product_type");
+    
+                CallableStatement msrpStmt = conn.prepareCall("{? = CALL getMSRP(?)}");
+                msrpStmt.registerOutParameter(1, Types.DECIMAL);
+                msrpStmt.setString(2, productCode);
+                msrpStmt.execute();
+    
+                double msrp = msrpStmt.getDouble(1);
     
                 CallableStatement minPriceStmt = conn.prepareCall("{? = CALL getPrice(?, 'MIN')}");
                 CallableStatement maxPriceStmt = conn.prepareCall("{? = CALL getPrice(?, 'MAX')}");
-                
+    
                 minPriceStmt.registerOutParameter(1, Types.DOUBLE);
                 minPriceStmt.setString(2, productCode);
                 minPriceStmt.execute();
-                
+    
                 maxPriceStmt.registerOutParameter(1, Types.DOUBLE);
                 maxPriceStmt.setString(2, productCode);
                 maxPriceStmt.execute();
-                
+    
                 double minPrice = minPriceStmt.getDouble(1);
                 double maxPrice = maxPriceStmt.getDouble(1);
     
                 System.out.println("\nProduct Name: " + productName);
+                System.out.println("Product Type: " + (productType.equals("R") ? "Retail" : "Wholesale"));
+                System.out.println("MSRP: " + msrp);
                 System.out.println("Minimum Price: " + minPrice);
                 System.out.println("Maximum Price: " + maxPrice);
+    
+                minPriceStmt.close();
+                maxPriceStmt.close();
+                msrpStmt.close();
             } else {
                 System.out.println("Product not found.");
             }
@@ -314,6 +328,7 @@ public class Products {
             return 0;
         }
     }
+    
     
 
     public static void main(String args[]) {
