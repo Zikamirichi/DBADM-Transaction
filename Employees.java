@@ -40,6 +40,9 @@ public class Employees {
             conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             conn.setAutoCommit(false);
 
+            System.out.println("\nPress enter key to start creating an employee record");
+            sc.nextLine();
+
             System.out.println("Enter Last Name:");
             lastName = sc.nextLine();
 
@@ -157,6 +160,8 @@ public class Employees {
             deptCodeRs.close();
             deptCodeStmt.close();
 
+            
+
             //Stored procedure has lock
             PreparedStatement insertStmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             insertStmt.setString(1, lastName);
@@ -168,9 +173,6 @@ public class Employees {
             insertStmt.setInt(7, deptCode);
             insertStmt.setString(8, end_username);
             insertStmt.setString(9, end_userreason);
-
-            System.out.println("\nPress enter key to start creating an employee record");
-            sc.nextLine();
 
             insertStmt.executeUpdate();
 
