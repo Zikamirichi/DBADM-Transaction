@@ -98,7 +98,7 @@ public class Employees {
 
                 switch (typeChoice) {
                     case 1:
-                        employeeType = "Sales Representative";
+                        employeeType = "Sales Representatives";
                         validChoice = true;
                         break;
                     case 2:
