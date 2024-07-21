@@ -181,15 +181,6 @@ public class Employees {
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-
-            try {
-                conn.rollback();
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-
-                return 0; 
-            }
     }
 
 
