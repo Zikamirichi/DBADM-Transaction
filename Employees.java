@@ -37,7 +37,7 @@ public class Employees {
 
         try {
             // Establish database connection
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=DLSU.1234!");
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             conn.setAutoCommit(false);
 
             System.out.println("Enter Last Name:");
@@ -219,7 +219,7 @@ public class Employees {
         boolean employeeExists = false;
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=DLSU.1234!");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             
             while (true) {
                 System.out.println("Enter Employee Number:");
@@ -318,7 +318,7 @@ public class Employees {
 
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -373,7 +373,7 @@ public class Employees {
     private int getAllSalesRepAssignments() {
         Scanner sc = new Scanner(System.in);
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -433,7 +433,7 @@ public class Employees {
         int choice = sc.nextInt();
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -514,7 +514,7 @@ public class Employees {
         Scanner sc = new Scanner(System.in);
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -585,7 +585,7 @@ public class Employees {
             employeeNumber = sc.nextInt();    
 
             try {
-                Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+                Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
                 System.out.println("Connection Successful");
                 conn.setAutoCommit(false);
                 
@@ -684,7 +684,7 @@ public class Employees {
         end_userreason = sc.nextLine();
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -730,7 +730,7 @@ public class Employees {
         Scanner sc = new Scanner(System.in);
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -779,7 +779,7 @@ public class Employees {
         deptCode = sc.nextInt();
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.6?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
