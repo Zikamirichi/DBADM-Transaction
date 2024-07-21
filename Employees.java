@@ -40,9 +40,6 @@ public class Employees {
             conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             conn.setAutoCommit(false);
 
-            System.out.println("\nPress enter key to start creating an employee record");
-            sc.nextLine();
-
             System.out.println("Enter Last Name:");
             lastName = sc.nextLine();
 
@@ -55,35 +52,11 @@ public class Employees {
             System.out.println("Enter email:");
             email = sc.nextLine();
 
-            // Fetch job titles from database
-            System.out.println("Select a Job Title:");
-            String jobTitlesQuery = "SELECT jobTitle FROM employees_jobTitles LOCK IN SHARE MODE";
-            PreparedStatement pstmt = conn.prepareStatement(jobTitlesQuery);
-            ResultSet rs = pstmt.executeQuery();
+            System.out.println("Enter the job title:");
+            jobTitle =  sc.nextLine();
 
-            int optionCount = 1;
-            while (rs.next()) {
-                String title = rs.getString("jobTitle");
-                System.out.println("[" + optionCount + "] " + title);
-                optionCount++;
-            }
-
-            System.out.println("Enter the number of the job title:");
-            int choice = sc.nextInt();
-            sc.nextLine();
-
-            // Retrieve selected job title based on user's choice
-            pstmt = conn.prepareStatement("SELECT jobTitle FROM employees_jobTitles LIMIT ?, 1");
-            pstmt.setInt(1, choice - 1); //SQL is 0 based index
-            rs= pstmt.executeQuery();
-
-            if (rs.next()) {
-                jobTitle = rs.getString("jobTitle");
-            } else {
-                throw new SQLException("Invalid choice. No such job title found.");
-            }
-            // end for job title
-            
+            System.out.println("Enter the department code:");
+            deptCode = sc.nextInt();
 
             System.out.println("Select Employee Type:");
             System.out.println("[1] Sales Representative");
@@ -115,41 +88,22 @@ public class Employees {
                 }
             }
 
-
-            // Fetch department codes from database
-            System.out.println("Select Department Code:");
-            String deptCodesQuery = "SELECT deptCode FROM departments ORDER BY deptCode ASC";
-            pstmt= conn.prepareStatement(deptCodesQuery);
-            rs= pstmt.executeQuery();
-
-            optionCount = 1;
-            while (rs.next()) {
-                int code = rs.getInt("deptCode");
-                System.out.println("[" + optionCount + "] " + code);
-                optionCount++;
-            }
-
-            System.out.println("Enter the number of the department code:");
-            choice = sc.nextInt();
-            sc.nextLine();
-
-            pstmt= conn.prepareStatement("SELECT DISTINCT deptCode FROM departments LIMIT ?, 1");
-            pstmt.setInt(1, choice - 1); // Adjust for 0-based index in SQL
-            rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                deptCode = rs.getInt("deptCode");
-            } else {
-                throw new SQLException("Invalid choice. No such department code found.");
-            }
-            // end for department code
-
             System.out.println("Enter your username:");
             end_username = sc.nextLine();
 
             System.out.println("Enter your reason:");
             end_userreason = sc.nextLine();
-        
+            
+            System.out.println("\nPress enter key to start creating an employee record");
+            sc.nextLine();
+
+            String jobTitlesQuery = "SELECT * FROM employees_jobTitles LOCK IN SHARE MODE";
+            PreparedStatement pstmt = conn.prepareStatement(jobTitlesQuery);
+            pstmt.executeQuery();
+
+            String deptCodesQuery = "SELECT * FROM departments LOCK IN SHARE MODE";
+            pstmt = conn.prepareStatement(deptCodesQuery);
+            pstmt.executeQuery();
 
             //Stored procedure has lock
             PreparedStatement insertStmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -174,7 +128,6 @@ public class Employees {
 
             // Close resources
             pstmt.close();
-            rs.close();
             insertStmt.close();
             conn.close();
 
@@ -875,13 +828,20 @@ public class Employees {
     }
 
     public int updateSupervisingManager() {
+        Scanner sc = new Scanner(System.in);
         System.out.println("Enter Employee Number:");
         employeeNumber = sc.nextInt();
         sc.nextLine();
 
+        System.out.println("Enter Office Code:");
+        officeCode = sc.nextLine();
+
+        System.out.println("Enter Start Date:");
+        startDate = sc.nextLine();
+
         System.out.println("Enter Sales Manager Number:");
         end_username = sc.nextLine();
-       
+
         System.out.println("Enter End Username:");
         end_username = sc.nextLine();
 
@@ -896,7 +856,7 @@ public class Employees {
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
 
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? FOR UPDATE");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
 
@@ -904,15 +864,19 @@ public class Employees {
             pstmt.setInt(1, salesManagerNumber);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? FOR UPDATE");
+            pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? AND officeCode = ? AND startDate = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
+            pstmt.setString(2, officeCode);
+            pstmt.setString(3, startDate);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("UPDATE employees SET salesManagerNumber = ?, end_username = ?, end_userreason = ? WHERE employeeNumber = ?");
+            pstmt = conn.prepareStatement("UPDATE employees SET salesManagerNumber = ?, end_username = ?, end_userreason = ? WHERE employeeNumber = ? AND officeCode = ? AND startDate = ? ");
             pstmt.setInt(1, salesManagerNumber);
             pstmt.setString(2, end_username);
             pstmt.setString(3, end_userreason);
             pstmt.setInt(4, employeeNumber);
+            pstmt.setString(5, officeCode);
+            pstmt.setString(6, startDate);
 
             conn.commit();
 
