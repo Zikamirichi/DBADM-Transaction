@@ -58,12 +58,12 @@ public class Employees {
             // Fetch job titles from database
             System.out.println("Select a Job Title:");
             String jobTitlesQuery = "SELECT jobTitle FROM employees_jobtitles LOCK IN SHARE MODE";
-            PreparedStatement jobTitlesStmt = conn.prepareStatement(jobTitlesQuery);
-            ResultSet jobTitlesRs = jobTitlesStmt.executeQuery();
+            PreparedStatement pstmt = conn.prepareStatement(jobTitlesQuery);
+            ResultSet rs = pstmt.executeQuery();
 
             int optionCount = 1;
             while (jobTitlesRs.next()) {
-                String title = jobTitlesRs.getString("jobTitle");
+                String title = rs.getString("jobTitle");
                 System.out.println("[" + optionCount + "] " + title);
                 optionCount++;
             }
@@ -73,12 +73,12 @@ public class Employees {
             sc.nextLine();
 
             // Retrieve selected job title based on user's choice
-            PreparedStatement jobTitleStmt = conn.prepareStatement("SELECT jobTitle FROM employees_jobtitles LIMIT ?, 1");
-            jobTitleStmt.setInt(1, choice - 1); //SQL is 0 based index
-            ResultSet jobTitleRs = jobTitleStmt.executeQuery();
+            pstmt = conn.prepareStatement("SELECT jobTitle FROM employees_jobtitles LIMIT ?, 1");
+            pstmt.setInt(1, choice - 1); //SQL is 0 based index
+            rs= pstmt.executeQuery();
 
-            if (jobTitleRs.next()) {
-                jobTitle = jobTitleRs.getString("jobTitle");
+            if (rs.next()) {
+                jobTitle = rs.getString("jobTitle");
             } else {
                 throw new SQLException("Invalid choice. No such job title found.");
             }
@@ -119,12 +119,12 @@ public class Employees {
             // Fetch department codes from database
             System.out.println("Select Department Code:");
             String deptCodesQuery = "SELECT deptCode FROM departments ORDER BY deptCode ASC";
-            PreparedStatement deptCodesStmt = conn.prepareStatement(deptCodesQuery);
-            ResultSet deptCodesRs = deptCodesStmt.executeQuery();
+            pstmt= conn.prepareStatement(deptCodesQuery);
+            rs= pstmt.executeQuery();
 
             optionCount = 1;
-            while (deptCodesRs.next()) {
-                int code = deptCodesRs.getInt("deptCode");
+            while (rs.next()) {
+                int code = rs.getInt("deptCode");
                 System.out.println("[" + optionCount + "] " + code);
                 optionCount++;
             }
@@ -133,12 +133,12 @@ public class Employees {
             choice = sc.nextInt();
             sc.nextLine();
 
-            PreparedStatement deptCodeStmt = conn.prepareStatement("SELECT DISTINCT deptCode FROM departments LIMIT ?, 1");
-            deptCodeStmt.setInt(1, choice - 1); // Adjust for 0-based index in SQL
-            ResultSet deptCodeRs = deptCodeStmt.executeQuery();
+            pstmt= conn.prepareStatement("SELECT DISTINCT deptCode FROM departments LIMIT ?, 1");
+            pstmt.setInt(1, choice - 1); // Adjust for 0-based index in SQL
+            rs = pstmt.executeQuery();
 
-            if (deptCodeRs.next()) {
-                deptCode = deptCodeRs.getInt("deptCode");
+            if (rs.next()) {
+                deptCode = rs.getInt("deptCode");
             } else {
                 throw new SQLException("Invalid choice. No such department code found.");
             }
@@ -149,18 +149,7 @@ public class Employees {
 
             System.out.println("Enter your reason:");
             end_userreason = sc.nextLine();
-
-            // Close resources for job titles and dept code retrieval
-            jobTitlesRs.close();
-            jobTitlesStmt.close();
-            jobTitleRs.close();
-            jobTitleStmt.close();
-            deptCodesRs.close();
-            deptCodesStmt.close();
-            deptCodeRs.close();
-            deptCodeStmt.close();
-
-            
+        
 
             //Stored procedure has lock
             PreparedStatement insertStmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -184,6 +173,8 @@ public class Employees {
             conn.commit();
 
             // Close resources
+            pstmt.close();
+            rs.close();
             insertStmt.close();
             conn.close();
 
