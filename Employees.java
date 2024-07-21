@@ -54,7 +54,7 @@ public class Employees {
 
             // Fetch job titles from database
             System.out.println("Select a Job Title:");
-            String jobTitlesQuery = "SELECT jobTitle FROM employees_jobtitles";
+            String jobTitlesQuery = "SELECT jobTitle FROM employees_jobtitles LOCK IN SHARE MODE";
             PreparedStatement jobTitlesStmt = conn.prepareStatement(jobTitlesQuery);
             ResultSet jobTitlesRs = jobTitlesStmt.executeQuery();
 
