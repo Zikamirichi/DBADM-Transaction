@@ -79,7 +79,6 @@ CREATE DEFINER=`DBADM_208`@`%` TRIGGER `employees_BEFORE_INSERT` BEFORE INSERT O
     SET fixed_part = '02';
 	
     SELECT COUNT(1) INTO forLock FROM employees_audit FOR UPDATE;
-    DO SLEEP(15);
 	SELECT MAX(employeeNumber) INTO lastNumber FROM employees_audit;
     
     SET NumberString = CAST(lastNumber AS CHAR);
@@ -94,6 +93,7 @@ CREATE DEFINER=`DBADM_208`@`%` TRIGGER `employees_BEFORE_INSERT` BEFORE INSERT O
 	SET new.is_deactivated := 0;
 END$$
 DELIMITER ;
+
 
 
 -- for reclassifyEmployee function in java
