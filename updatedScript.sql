@@ -27,14 +27,6 @@ BEGIN
 	DECLARE employee_type ENUM('S','N');
     DECLARE employeeNumber1 INT;
     DECLARE forlock INT;
-	
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
-	BEGIN
-		ROLLBACK;
-		RESIGNAL;
-	END;
-	
-	START TRANSACTION;
 
 		IF p_employee_Type = 'Sales Representatives'  THEN
 			SET employee_type := 'S';
@@ -49,7 +41,6 @@ BEGIN
 		VALUES (p_lastName, p_firstName, p_extension, p_email, p_jobTitle, employee_type, p_end_username, p_end_userreason);
 		
         SELECT COUNT(1) INTO forLock FROM employees FOR UPDATE;
-		DO SLEEP(15);
 		SELECT MAX(employeeNumber) INTO employeeNumber1 FROM employees;
 		IF p_employee_Type = 'Sales Representatives'  THEN
 			INSERT INTO salesRepresentatives (employeeNumber) VALUES (employeeNumber1);
@@ -62,12 +53,12 @@ BEGIN
 		ELSE
 			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80A2: Invalid employee type';
 		END IF;
-        
-	COMMIT;
 END$$
 
 DELIMITER ;
 ;
+
+
 
 DROP TRIGGER IF EXISTS `DBSALES26_G208`.`employees_BEFORE_INSERT`;
 
