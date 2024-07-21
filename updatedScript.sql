@@ -97,6 +97,52 @@ DELIMITER ;
 
 
 -- for reclassifyEmployee function in java
+-- since all procedures update employees table, i put lock on java before calling procedure to change
+-- for locks in getEmployeeType - no start and commit here -- locked inventory and sales manager table and salesrep
+USE `DBSALES26_G208`;
+DROP function IF EXISTS `getEmployeeType`;
+
+USE `DBSALES26_G208`;
+DROP function IF EXISTS `DBSALES26_G208`.`getEmployeeType`;
+;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` FUNCTION `getEmployeeType`( v_employeeNumber INT) RETURNS smallint
+    READS SQL DATA
+    DETERMINISTIC
+BEGIN
+	DECLARE v_tableName SMALLINT(1);
+    DECLARE forLock INT;
+    
+	/*
+		1 - sales_representatives
+        2 - sales_managers
+        3 - inventory_managers
+    */
+    
+    
+    -- Check in sales_representatives
+    SELECT COUNT(1) INTO forLock FROM salesRepresentatives FOR UPDATE;
+    IF EXISTS (SELECT 1 FROM salesRepresentatives WHERE employeeNumber = v_employeeNumber) THEN
+        SET v_tableName = 1;
+    -- Check in sales_managers
+    SELECT COUNT(1) INTO forLock FROM sales_managers FOR UPDATE;
+    ELSEIF EXISTS (SELECT 1 FROM sales_managers WHERE employeeNumber = v_employeeNumber) THEN
+        SET v_tableName = 2;
+    -- Check in inventory_managers
+    SELECT COUNT(1) INTO forLock FROM inventory_managers FOR UPDATE;
+    ELSEIF EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = v_employeeNumber) THEN
+        SET v_tableName = 3;
+    ELSE
+        SET v_tableName = NULL;
+    END IF;
+
+    RETURN v_tableName;
+END$$
+
+DELIMITER ;
+;
 
 -- for resignEmployee function in java
 -- deactivateEmployee procedure (employees and salesRepAssignments are WRITE LOCK)
@@ -212,6 +258,123 @@ BEGIN
     COMMIT;
     
     
+END$$
+
+DELIMITER ;
+;
+
+-- (Added Read Lock) getMSRP
+USE `dbsalesv2.5g208`;
+DROP function IF EXISTS `getMSRP`;
+
+USE `dbsalesv2.5g208`;
+DROP function IF EXISTS `dbsalesv2.5g208`.`getMSRP`;
+;
+
+DELIMITER $$
+USE `dbsalesv2.5g208`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `getMSRP`(v_productCode VARCHAR(15)) RETURNS decimal(9,2)
+    READS SQL DATA
+    DETERMINISTIC
+BEGIN
+    DECLARE v_MSRP DECIMAL(9,2);
+    DECLARE currentDate DATETIME;
+    DECLARE p_type ENUM('R', 'W');
+    DECLARE temp_productCode VARCHAR(15); -- Used for determining if the productCode exists.
+    
+    -- Set currentDate to today
+    SET currentDate = NOW();
+    
+    -- Assuming product_type can be NULL
+    SELECT productCode INTO temp_productCode
+    FROM current_products
+    WHERE productCode = v_productCode
+    LOCK IN SHARE MODE;
+    
+    -- Checks if productCode does not exist
+    IF (temp_productCode IS NULL) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERROR 7001: Product Code does not exist!";
+    ELSE -- If productCode exists
+        -- Retrieve the product type from current_products
+        SELECT product_type INTO p_type FROM current_products 
+        WHERE productCode = v_productCode
+        LOCK IN SHARE MODE;
+        
+        IF (p_type = 'R') THEN
+            IF currentDate < (SELECT MIN(startdate) FROM product_pricing WHERE productCode = v_productCode LOCK IN SHARE MODE) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 7002: Selling Price start date is set on a later date!';
+            ELSEIF currentDate > (SELECT MAX(enddate) FROM product_pricing WHERE productCode = v_productCode LOCK IN SHARE MODE) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 7003: Selling Price has expired. Update its entry!';
+            ELSE
+                SELECT pp.MSRP INTO v_MSRP 
+                FROM product_pricing pp 
+                JOIN product_retail pr ON pp.productCode = pr.productCode
+                WHERE pp.productCode = v_productCode
+                LOCK IN SHARE MODE;
+                RETURN v_MSRP;
+            END IF;
+        ELSEIF (p_type = 'W') THEN
+            SELECT MSRP INTO v_MSRP 
+            FROM product_wholesale
+            WHERE productCode = v_productCode
+            LOCK IN SHARE MODE;
+            RETURN v_MSRP;
+        ELSE
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERROR 7004: Product Code does not have a product type assigned!";
+        END IF; -- End of IF(p_type = 'R')
+    END IF; -- End of (temp_productCode IS NULL)
+    RETURN 1;
+END$$
+
+DELIMITER ;
+;
+
+
+-- (Added Read Lock) getPrice
+USE `dbsalesv2.5g208`;
+DROP function IF EXISTS `getPrice`;
+
+USE `dbsalesv2.5g208`;
+DROP function IF EXISTS `dbsalesv2.5g208`.`getPrice`;
+;
+
+DELIMITER $$
+USE `dbsalesv2.5g208`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `getPrice`(v_productCode VARCHAR(15), v_mode VARCHAR(10)) RETURNS double
+    READS SQL DATA
+    DETERMINISTIC
+BEGIN
+    DECLARE curr_productType CHAR(1);
+    DECLARE min_price DOUBLE;
+    DECLARE max_price DOUBLE;
+    
+    SELECT product_type INTO curr_productType FROM current_products 
+    WHERE productCode = v_productCode
+    LOCK IN SHARE MODE;
+    
+    IF (curr_productType = 'W') THEN
+        SELECT (MSRP*2), (MSRP*0.8) INTO max_price, min_price 
+        FROM product_wholesale 
+        WHERE productCode = v_productCode
+        LOCK IN SHARE MODE;
+    ELSEIF (curr_productType = 'R') THEN
+        SELECT (MSRP*2), (MSRP*0.8) INTO max_price, min_price
+        FROM product_pricing 
+        WHERE productCode = v_productCode
+        AND DATE(NOW()) <= endDate 
+        AND DATE(NOW()) >= startDate
+        LOCK IN SHARE MODE;
+    END IF;
+    
+    IF (max_price IS NULL) OR (min_price IS NULL) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERROR 01M1: Price of the product cannot be determined";
+    END IF;
+    
+    IF (v_mode = 'MAX') THEN 
+        RETURN max_price;
+    ELSE
+        RETURN min_price;
+    END IF;
 END$$
 
 DELIMITER ;

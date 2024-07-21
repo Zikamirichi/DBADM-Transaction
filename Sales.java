@@ -19,6 +19,8 @@ public class Sales {
     String status;
     String comments;
     int customerNumber;
+    String end_username;
+    String end_userreason;
 
     /*
     ArrayList<String> productCode = new ArrayList<>();
@@ -41,13 +43,16 @@ public class Sales {
     public Sales() {}
 
     public Sales(String productCode, int quantityOrdered, double priceEach, int orderLineNumber, int referenceNo,
-                 String productName) {
+                 String productName, String end_username, String end_userreason) {
         this.productCode = productCode;
         this.quantityOrdered = quantityOrdered;
         this.priceEach = priceEach;
         this.orderLineNumber = orderLineNumber;
         this.referenceNo = referenceNo;
         this.productName = productName;
+        this.end_username = end_username;
+        this.end_userreason = end_userreason;
+
     }
 
     public int createOrder() {
@@ -61,6 +66,13 @@ public class Sales {
         System.out.println("Enter Customer Number:");
         customerNumber = sc.nextInt();
 
+        sc.nextLine();
+
+        System.out.println("Enter End Username: ");
+        end_username = sc.nextLine();
+
+        System.out.println("Enter End User Reason: ");
+        end_userreason = sc.nextLine();
 
         // TODO determine get previous assignment or newly?
 
@@ -69,12 +81,15 @@ public class Sales {
             System.out.println("Connection Successful");
 
             PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO orders (`requiredDate`, `comments`, `customerNumber`) " +
-                            "VALUES (?, ?, ?)");
+                    "INSERT INTO orders (`requiredDate`, `comments`, `customerNumber`, end_username, end_userreason) " +
+                            "VALUES (?, ?, ?, ?, ?)");
 
             pstmt.setString(1, requiredDate);
             pstmt.setString(2, comments);
             pstmt.setInt(3, customerNumber);
+            pstmt.setString(4, end_username);
+            pstmt.setString(5, end_userreason);
+
 
             pstmt.executeUpdate();
 
@@ -104,9 +119,17 @@ public class Sales {
 
         System.out.println("Enter Quantity Ordered:");
         quantityOrdered = sc.nextInt();
+        sc.nextLine();
 
         System.out.println("Enter Price Each:");
         priceEach = sc.nextDouble();
+        sc.nextLine();
+
+        System.out.println("Enter End Username: ");
+        end_username = sc.nextLine();
+
+        System.out.println("Enter End User Reason: ");
+        end_userreason = sc.nextLine();
 
 
 
@@ -117,13 +140,15 @@ public class Sales {
             System.out.println("Connection Successful");
 
             PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO orderdetails (`orderNumber`, `productCode`, `quantityOrdered`, `priceEach`) " +
-                            "VALUES (?, ?, ?, ?)");
+                    "INSERT INTO orderdetails (`orderNumber`, `productCode`, `quantityOrdered`, `priceEach`, `end_username`, `end_userreason`) " +
+                            "VALUES (?, ?, ?, ?, ?, ?)");
 
             pstmt.setInt(1, Integer.parseInt(orderNumber));
             pstmt.setString(2, productCode);
             pstmt.setInt(3, quantityOrdered);
             pstmt.setDouble(4, priceEach);
+            pstmt.setString(5, end_username);
+            pstmt.setString(6, end_userreason);
 
             pstmt.executeUpdate();
 
@@ -174,6 +199,8 @@ public class Sales {
                 status = rs.getString("status");
                 comments = rs.getString("comments");
                 customerNumber = rs.getInt("customerNumber");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
 
             }
             rs.close();
@@ -185,6 +212,8 @@ public class Sales {
             System.out.println("status: " + status);
             System.out.println("Comments: " + comments);
             System.out.println("Customer Number: " + customerNumber);
+            System.out.println("End Username: " + end_username);
+            System.out.println("End User Reason: " + end_userreason);
 
             System.out.println("Press enter key to enter new values for order");
             sc.nextLine();
@@ -195,16 +224,26 @@ public class Sales {
             if (Objects.equals(status, "Shipped")) {
                 System.out.println("Enter Shipped Date: ");
                 shippedDate = sc.nextLine();
+            } else {
+                shippedDate = null;
             }
 
             System.out.println("Enter Comment: ");
             comments = sc.nextLine();
 
-            pstmt = conn.prepareStatement ("UPDATE orders SET status=?,  shippedDate = ?, comments = ? WHERE orderNumber=?");
+            System.out.println("Enter End Username: ");
+            end_username = sc.nextLine();
+
+            System.out.println("Enter End User Reason: ");
+            end_userreason = sc.nextLine();
+
+            pstmt = conn.prepareStatement ("UPDATE orders SET status=?,  shippedDate = ?, comments = ?, end_username=?, end_userreason=? WHERE orderNumber=?");
             pstmt.setString(1,  status);
             pstmt.setString(2, shippedDate);
             pstmt.setString(3,  comments);
-            pstmt.setInt(4, Integer.parseInt(orderNumber));
+            pstmt.setString(4, end_username);
+            pstmt.setString(5, end_userreason);
+            pstmt.setInt(6, Integer.parseInt(orderNumber));
             pstmt.executeUpdate();
 
 
@@ -258,6 +297,8 @@ public class Sales {
                 priceEach = rs.getDouble("priceEach");
                 orderLineNumber = rs.getInt("orderLineNumber");
                 referenceNo = rs.getInt("referenceNo");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
 
             }
             rs.close();
@@ -268,6 +309,8 @@ public class Sales {
             System.out.println("Price Each: " + priceEach);
             System.out.println("Order Line Number: " + orderLineNumber);
             System.out.println("Reference Number: " + referenceNo);
+            System.out.println("End Username: " + end_username);
+            System.out.println("End User Reason: " + end_userreason);
             System.out.println("\n");
 
             System.out.println("Press enter key to enter new values for order");
@@ -275,27 +318,42 @@ public class Sales {
 
             System.out.println("Enter Quantity Ordered: ");
             quantityOrdered = sc.nextInt();
+            sc.nextLine();
 
             System.out.println("Enter Price Each: ");
             priceEach = sc.nextDouble();
+            sc.nextLine();
 
 
             System.out.println("Enter Reference Number (type -1 if this product isn't intended to be shipped): ");
             referenceNo = sc.nextInt();
+            sc.nextLine();
+
+            System.out.println("Enter End Username: ");
+            end_username = sc.nextLine();
+
+            System.out.println("Enter End User Reason: ");
+            end_userreason = sc.nextLine();
 
             if (referenceNo == -1) {
-                pstmt = conn.prepareStatement ("UPDATE orderdetails SET quantityOrdered=?,  priceEach = ? WHERE orderNumber=? AND productCode=?");
+                pstmt = conn.prepareStatement ("UPDATE orderdetails SET quantityOrdered=?,  priceEach = ?, end_username=?, end_userreason=? WHERE orderNumber=? AND productCode=?");
                 pstmt.setInt(1,  quantityOrdered);
                 pstmt.setDouble(2, priceEach);
-                pstmt.setInt(3, Integer.parseInt(orderNumber));
-                pstmt.setString(4, productCode);
+                pstmt.setString(3, end_username);
+                pstmt.setString(4, end_userreason);
+                pstmt.setInt(5, Integer.parseInt(orderNumber));
+                pstmt.setString(6, productCode);
+
             } else {
-                pstmt = conn.prepareStatement ("UPDATE orderdetails SET quantityOrdered=?,  priceEach = ?, referenceNo=? WHERE orderNumber=? AND productCode=?");
+                pstmt = conn.prepareStatement ("UPDATE orderdetails SET quantityOrdered=?,  priceEach = ?, referenceNo=?, end_username=?, end_userreason=? WHERE orderNumber=? AND productCode=?");
                 pstmt.setInt(1,  quantityOrdered);
                 pstmt.setDouble(2, priceEach);
                 pstmt.setInt(3,  referenceNo);
-                pstmt.setInt(4, Integer.parseInt(orderNumber));
-                pstmt.setString(5, productCode);
+                pstmt.setString(4, end_username);
+                pstmt.setString(5, end_userreason);
+                pstmt.setInt(6, Integer.parseInt(orderNumber));
+                pstmt.setString(7, productCode);
+
             }
             pstmt.executeUpdate();
 
@@ -351,7 +409,20 @@ public class Sales {
                     status = rs.getString("status");
                     comments = rs.getString("comments");
                     customerNumber = rs.getInt("customerNumber");
+                    end_username = rs.getString("end_username");
+                    end_userreason = rs.getString("end_userreason");
                     flag = false;
+
+                    System.out.println("Order View\n");
+                    System.out.println("Order Date: " + orderDate);
+                    System.out.println("Required Date: " + requiredDate);
+                    System.out.println("Shipped Date: " + shippedDate);
+                    System.out.println("status: " + status);
+                    System.out.println("Comments: " + comments);
+                    System.out.println("Customer Number: " + customerNumber);
+                    System.out.println("End Username: " + end_username);
+                    System.out.println("End User Reason: " + end_userreason);
+                    System.out.println("------------------------------------------------\n");
                 }
 
                 productCode = rs.getString("productCode");
@@ -360,18 +431,13 @@ public class Sales {
                 priceEach = rs.getDouble("priceEach");
                 orderLineNumber = rs.getInt("orderLineNumber");
                 referenceNo = rs.getInt("referenceNo");
-                tempSalesList.add(new Sales(productCode, quantityOrdered, priceEach, orderLineNumber, referenceNo, productName));
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
+                tempSalesList.add(new Sales(productCode, quantityOrdered, priceEach, orderLineNumber, referenceNo, productName, end_username, end_userreason));
 
             }
 
-            System.out.println("Order View\n");
-            System.out.println("Order Date: " + orderDate);
-            System.out.println("Required Date: " + requiredDate);
-            System.out.println("Shipped Date: " + shippedDate);
-            System.out.println("status: " + status);
-            System.out.println("Comments: " + comments);
-            System.out.println("Customer Number: " + customerNumber);
-            System.out.println("------------------------------------------------\n");
+
             System.out.println("Products Ordered:\n");
 
             for (int i = 0; i < tempSalesList.size(); i++) {
@@ -383,6 +449,8 @@ public class Sales {
                 System.out.println("Price Each: " + temp.priceEach);
                 System.out.println("Order Line Number: " + temp.orderLineNumber);
                 System.out.println("Reference Number: " + temp.referenceNo);
+                System.out.println("End Username: " + temp.end_username);
+                System.out.println("End User Reason: " + temp.end_userreason);
                 System.out.println("\n");
 
             }
