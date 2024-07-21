@@ -380,6 +380,103 @@ END$$
 DELIMITER ;
 ;
 
+-- (Added Write Lock) discontinue_product
+USE `dbsalesv2.5g208`;
+DROP procedure IF EXISTS `discontinue_product`;
+
+USE `dbsalesv2.5g208`;
+DROP procedure IF EXISTS `dbsalesv2.5g208`.`discontinue_product`;
+;
+
+DELIMITER $$
+USE `dbsalesv2.5g208`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `discontinue_product`(
+    IN p_productCode VARCHAR(15),
+    IN p_inventoryManagerId INT,
+    IN p_reason VARCHAR(45),
+    IN p_end_username VARCHAR(45),
+    IN p_end_userreason VARCHAR(45)
+)
+BEGIN
+    DECLARE productExists INT;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Check if the user is an inventory manager
+    IF NOT EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = p_inventoryManagerId) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z1: Only inventory managers can discontinue products.';
+    END IF;
+
+    -- Lock the current_products row for the given productCode
+    SELECT COUNT(*) INTO productExists FROM current_products WHERE productCode = p_productCode FOR UPDATE;
+    IF productExists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z2: Product not found in current products.';
+    END IF;
+
+    -- Update product_category to discontinued in products
+    UPDATE products SET product_category = 'D' WHERE productCode = p_productCode;
+
+    -- Insert into discontinued_products
+    INSERT INTO discontinued_products (productCode, reason, inventory_manager, end_username, end_userreason)
+    VALUES (p_productCode, p_reason, p_inventoryManagerId, p_end_username, p_end_userreason);
+
+    COMMIT;
+END;$$
+
+DELIMITER ;
+;
+
+
+-- (Added Write Lock) reintroduce_product
+USE `dbsalesv2.5g208`;
+DROP procedure IF EXISTS `reintroduce_product`;
+
+USE `dbsalesv2.5g208`;
+DROP procedure IF EXISTS `dbsalesv2.5g208`.`reintroduce_product`;
+;
+
+DELIMITER $$
+USE `dbsalesv2.5g208`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reintroduce_product`(
+    IN p_productCode VARCHAR(15),
+    IN p_end_username VARCHAR(45),
+    IN p_end_userreason VARCHAR(45)
+)
+BEGIN
+    DECLARE productExists INT;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Lock the discontinued_products row for the given productCode
+    SELECT COUNT(*) INTO productExists FROM discontinued_products WHERE productCode = p_productCode FOR UPDATE;
+    IF productExists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z2: Product not found in discontinued products.';
+    END IF;
+
+    -- Update product_category to current in products
+    UPDATE products SET product_category = 'C' WHERE productCode = p_productCode;
+
+    -- Remove from discontinued_products
+    DELETE FROM discontinued_products WHERE productCode = p_productCode;
+
+    COMMIT;
+END;$$
+
+DELIMITER ;
+;
+
+
+
 
 
 -- For Sales Order Module
