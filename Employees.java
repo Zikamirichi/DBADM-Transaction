@@ -93,9 +93,6 @@ public class Employees {
 
             System.out.println("Enter your reason:");
             end_userreason = sc.nextLine();
-            
-            System.out.println("\nPress enter key to start creating an employee record");
-            sc.nextLine();
 
             String jobTitlesQuery = "SELECT * FROM employees_jobTitles LOCK IN SHARE MODE";
             PreparedStatement pstmt = conn.prepareStatement(jobTitlesQuery);
@@ -120,8 +117,6 @@ public class Employees {
             insertStmt.executeUpdate();
 
             System.out.println("\nEmployee record created successfully.");
-            System.out.println("\nPress enter key to end transaction");
-            sc.nextLine();
 
             // Commit transaction
             conn.commit();
@@ -174,9 +169,6 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
-            System.out.println("\nPress enter key to start transaction");
-            sc.nextLine();
-
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
@@ -197,9 +189,6 @@ public class Employees {
             }
 
             cstmt.executeUpdate();
-
-            System.out.println("\nPress enter key to end transaction");
-            sc.nextLine();
 
             pstmt.close();
             cstmt.close();
