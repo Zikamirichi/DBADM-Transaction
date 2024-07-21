@@ -275,8 +275,6 @@ public class Employees {
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
 
-            
-
             conn.commit();
 
             pstmt.close();
@@ -324,6 +322,9 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
             // lock to prevent manager from being deactivated
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, salesManagerNumber);
@@ -352,9 +353,6 @@ public class Employees {
             pstmt.setInt(7, salesManagerNumber);
             pstmt.setString(8, end_username);
             pstmt.setString(9, end_userreason);
-
-            System.out.println("\nPress enter key to start transaction");
-            sc.nextLine();
 
             pstmt.executeUpdate();
 
@@ -690,6 +688,9 @@ public class Employees {
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
             // lock to prevent manager from being deactivated
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, deptManagerNumber);
@@ -708,9 +709,6 @@ public class Employees {
             pstmt.setString(2, end_username);
             pstmt.setString(3, end_userreason);
             pstmt.setInt(4, deptCode);
-
-            System.out.println("\nPress enter key to start transaction");
-            sc.nextLine();
 
             pstmt.executeUpdate();
 
