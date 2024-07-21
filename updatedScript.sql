@@ -40,7 +40,7 @@ BEGIN
 		INSERT INTO employees (lastName, firstName, extension, email, jobTitle, employee_type, end_username, end_userreason)
 		VALUES (p_lastName, p_firstName, p_extension, p_email, p_jobTitle, employee_type, p_end_username, p_end_userreason);
 		
-        SELECT COUNT(1) INTO forLock FROM employees FOR UPDATE;
+        -- SELECT COUNT(1) INTO forLock FROM employees FOR UPDATE;
 		SELECT MAX(employeeNumber) INTO employeeNumber1 FROM employees;
 		IF p_employee_Type = 'Sales Representatives'  THEN
 			INSERT INTO salesRepresentatives (employeeNumber) VALUES (employeeNumber1);
