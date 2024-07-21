@@ -187,11 +187,79 @@ public class Employees {
 
 
     public int reclassifyEmployee() {
-        // getEmployeeType (add read lock)
-        // check SalesRepReassignment
-        // troubles with puting lock in the procedure because of syntax
-        return 1;
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Choose an option:");
+        System.out.println("[1] Change to Inventory Manager");
+        System.out.println("[2] Change to Sales Manager");
+        System.out.println("[3] Change to Sales Representative");
+        int option = sc.nextInt();
+        sc.nextLine(); 
+
+        if (option == 1) {
+            System.out.println("Enter Employee Number:");
+            employeeNumber = sc.nextInt();
+            sc.nextLine();
+            System.out.println("Enter Department Code:");
+            deptCode = sc.nextInt();
+        } else if (option == 2) {
+            System.out.println("Enter Employee Number:");
+            employeeNumber = sc.nextInt();
+            sc.nextLine();
+            System.out.println("Enter Department Code:");
+            deptCode = sc.nextInt();
+        } else if (option == 3) {
+            System.out.println("Enter Employee Number:");
+            employeeNumber = sc.nextInt();
+            sc.nextLine();
+        } else {
+            System.out.println("Invalid option");
+            return 0;
+        }
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            CallableStatement cstmt = null;
+            
+            if (option == 1) {
+                cstmt = conn.prepareCall("CALL employeeTypeToInventoryManagers(?, ?)");
+                cstmt.setInt(1, employeeNumber);
+                cstmt.setInt(2, deptCode);
+            } else if (option == 2) {
+                cstmt = conn.prepareCall("CALL employeeTypeToSalesManager(?, ?)");
+                cstmt.setInt(1, employeeNumber);
+                cstmt.setInt(2, deptCode);
+            } else if (option == 3) {
+                cstmt = conn.prepareCall("CALL employeeTypeToSalesRepresentative(?)");
+                cstmt.setInt(1, employeeNumber);
+            }
+
+            cstmt.executeUpdate();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            cstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
     }
+
 
     public int resignEmployee() {
         // getEmployeeNum (Read Lock) --- not done, where is this

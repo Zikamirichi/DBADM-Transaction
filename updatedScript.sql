@@ -97,6 +97,52 @@ DELIMITER ;
 
 
 -- for reclassifyEmployee function in java
+-- since all procedures update employees table, i put lock on java before calling procedure to change
+-- for locks in getEmployeeType - no start and commit here -- locked inventory and sales manager table and salesrep
+USE `DBSALES26_G208`;
+DROP function IF EXISTS `getEmployeeType`;
+
+USE `DBSALES26_G208`;
+DROP function IF EXISTS `DBSALES26_G208`.`getEmployeeType`;
+;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` FUNCTION `getEmployeeType`( v_employeeNumber INT) RETURNS smallint
+    READS SQL DATA
+    DETERMINISTIC
+BEGIN
+	DECLARE v_tableName SMALLINT(1);
+    DECLARE forLock INT;
+    
+	/*
+		1 - sales_representatives
+        2 - sales_managers
+        3 - inventory_managers
+    */
+    
+    
+    -- Check in sales_representatives
+    SELECT COUNT(1) INTO forLock FROM salesRepresentatives FOR UPDATE;
+    IF EXISTS (SELECT 1 FROM salesRepresentatives WHERE employeeNumber = v_employeeNumber) THEN
+        SET v_tableName = 1;
+    -- Check in sales_managers
+    SELECT COUNT(1) INTO forLock FROM sales_managers FOR UPDATE;
+    ELSEIF EXISTS (SELECT 1 FROM sales_managers WHERE employeeNumber = v_employeeNumber) THEN
+        SET v_tableName = 2;
+    -- Check in inventory_managers
+    SELECT COUNT(1) INTO forLock FROM inventory_managers FOR UPDATE;
+    ELSEIF EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = v_employeeNumber) THEN
+        SET v_tableName = 3;
+    ELSE
+        SET v_tableName = NULL;
+    END IF;
+
+    RETURN v_tableName;
+END$$
+
+DELIMITER ;
+;
 
 -- for resignEmployee function in java
 -- deactivateEmployee procedure (employees and salesRepAssignments are WRITE LOCK)
