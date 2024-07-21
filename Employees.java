@@ -262,7 +262,6 @@ public class Employees {
 
 
     public int resignEmployee() {
-        // getEmployeeNum (Read Lock) --- not done, where is this
         // isDeactivated function -- read lock employees table in java or db (?)
         // deactivateEmployee procedure - WRITE LOCK on employees, and salesRepAssignments
         // for delete in records, i lock in java because there are instances that the employeeNumber is not in the said table
@@ -875,6 +874,63 @@ public class Employees {
         return 0;
     }
 
+    public int updateSupervisingManager() {
+        System.out.println("Enter Employee Number:");
+        employeeNumber = sc.nextInt();
+        sc.nextLine();
+
+        System.out.println("Enter Sales Manager Number:");
+        end_username = sc.nextLine();
+       
+        System.out.println("Enter End Username:");
+        end_username = sc.nextLine();
+
+        System.out.println("Enter End User Reason:");
+        end_userreason = sc.nextLine();
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+           
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE salesManagerNumber = ? LOCK IN SHARE MODE");
+            pstmt.setInt(1, salesManagerNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("UPDATE employees SET salesManagerNumber = ?, end_username = ?, end_userreason = ? WHERE employeeNumber = ?");
+            pstmt.setInt(1, salesManagerNumber);
+            pstmt.setString(2, end_username);
+            pstmt.setString(3, end_userreason);
+            pstmt.setInt(4, employeeNumber);
+
+            conn.commit();
+
+            pstmt.close();
+            conn.close();
+
+            System.out.println("Employee record has been updated successfully.");
+            System.out.println("\nPress enter key to end transaction");
+
+            return 1; // Success
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0; 
+        } finally {
+            sc.close(); 
+        }
+    }
+
     public static void main (String args[]) {
         Scanner sc     = new Scanner (System.in);
         int     choice = 0;
@@ -894,6 +950,7 @@ public class Employees {
         if (choice==6) e.getEmployeeInfo();
         if (choice==7) e.assignDepartmentManager();
         if (choice==8) e.getDepartmentManagerInfo();
+        if (choice==9) e.updateSupervisingManager();
 
         
         System.out.println("Press enter key to continue....");
