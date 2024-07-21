@@ -23,7 +23,7 @@ public class Products {
         Connection conn = null;
 
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -114,7 +114,7 @@ public class Products {
         Connection conn = null;
 
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -172,7 +172,7 @@ public class Products {
         Connection conn = null;
 
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -266,12 +266,16 @@ public class Products {
         Connection conn = null;
     
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
     
             System.out.println("Enter Product Code:");
             productCode = sc.nextLine();
+    
+            // Lock the current_products table to prevent other transactions from writing to it while this transaction is in progress
+            PreparedStatement lockStmt = conn.prepareStatement("LOCK TABLES current_products READ");
+            lockStmt.execute();
     
             PreparedStatement selectStmt = conn.prepareStatement(
                 "SELECT p.productName, cp.product_type FROM products p JOIN current_products cp ON p.productCode = cp.productCode WHERE p.productCode = ? LOCK IN SHARE MODE");
@@ -319,6 +323,11 @@ public class Products {
     
             rs.close();
             selectStmt.close();
+    
+            // Unlock the tables after the transaction is done
+            PreparedStatement unlockStmt = conn.prepareStatement("UNLOCK TABLES");
+            unlockStmt.execute();
+    
             conn.commit();
             conn.close();
     
@@ -328,6 +337,7 @@ public class Products {
             return 0;
         }
     }
+    
     
     
 
