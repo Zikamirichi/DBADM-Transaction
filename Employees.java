@@ -251,14 +251,6 @@ public class Employees {
         
             conn.setAutoCommit(false);
 
-            CallableStatement cstmt = conn.prepareCall("CALL deactivateEmployee(?, ?, ?)");
-            cstmt.setInt(1, employeeNumber);
-            cstmt.setString(2, end_username);
-            cstmt.setString(3, end_userreason);
-            System.out.println("\nPress enter key to start transaction");
-            sc.nextLine();
-            cstmt.executeUpdate();
-
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
@@ -274,6 +266,16 @@ public class Employees {
             pstmt = conn.prepareStatement("SELECT * FROM salesRepresentatives WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
+
+            CallableStatement cstmt = conn.prepareCall("CALL deactivateEmployee(?, ?, ?)");
+            cstmt.setInt(1, employeeNumber);
+            cstmt.setString(2, end_username);
+            cstmt.setString(3, end_userreason);
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+            cstmt.executeUpdate();
+
+            
 
             conn.commit();
 
