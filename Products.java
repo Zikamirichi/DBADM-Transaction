@@ -273,6 +273,10 @@ public class Products {
             System.out.println("Enter Product Code:");
             productCode = sc.nextLine();
     
+            // Lock the current_products table to prevent other transactions from writing to it while this transaction is in progress
+            PreparedStatement lockStmt = conn.prepareStatement("LOCK TABLES current_products READ");
+            lockStmt.execute();
+    
             PreparedStatement selectStmt = conn.prepareStatement(
                 "SELECT p.productName, cp.product_type FROM products p JOIN current_products cp ON p.productCode = cp.productCode WHERE p.productCode = ? LOCK IN SHARE MODE");
             selectStmt.setString(1, productCode);
@@ -319,6 +323,11 @@ public class Products {
     
             rs.close();
             selectStmt.close();
+    
+            // Unlock the tables after the transaction is done
+            PreparedStatement unlockStmt = conn.prepareStatement("UNLOCK TABLES");
+            unlockStmt.execute();
+    
             conn.commit();
             conn.close();
     
@@ -328,6 +337,7 @@ public class Products {
             return 0;
         }
     }
+    
     
     
 
