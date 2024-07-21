@@ -108,6 +108,8 @@ DELIMITER ;
 -- for reclassifyEmployee function in java
 
 -- for resignEmployee function in java
+-- deactivateEmployee procedure (employees and salesRepAssignments are WRITE LOCK)
+-- inventory manager, sales manager, non salesrep, and salesRep tables are WRITE LOCK in java
 USE `DBSALES26_G208`;
 DROP procedure IF EXISTS `deactivateEmployee`;
 

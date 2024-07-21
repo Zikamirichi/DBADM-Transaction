@@ -40,6 +40,9 @@ public class Employees {
             conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             conn.setAutoCommit(false);
 
+            System.out.println("\nPress enter key to start creating an employee record");
+            sc.nextLine();
+
             System.out.println("Enter Last Name:");
             lastName = sc.nextLine();
 
@@ -157,6 +160,8 @@ public class Employees {
             deptCodeRs.close();
             deptCodeStmt.close();
 
+            
+
             //Stored procedure has lock
             PreparedStatement insertStmt = conn.prepareStatement("CALL add_employee(?, ?, ?, ?, ?, ?, ?, ?, ?)");
             insertStmt.setString(1, lastName);
@@ -168,9 +173,6 @@ public class Employees {
             insertStmt.setInt(7, deptCode);
             insertStmt.setString(8, end_username);
             insertStmt.setString(9, end_userreason);
-
-            System.out.println("\nPress enter key to start creating an employee record");
-            sc.nextLine();
 
             insertStmt.executeUpdate();
 
@@ -215,49 +217,25 @@ public class Employees {
         // i used for update in tables that should be deleted
 
         Scanner sc = new Scanner(System.in);
-        int employeeNumber = 0;
-        boolean employeeExists = false;
+
+        System.out.println("Enter Employee Number:");
+        employeeNumber = sc.nextInt();
+        sc.nextLine();
+       
+        System.out.println("Enter End Username:");
+        end_username = sc.nextLine();
+
+        System.out.println("Enter End User Reason:");
+        end_userreason = sc.nextLine();
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
-            
-            while (true) {
-                System.out.println("Enter Employee Number:");
-                employeeNumber = sc.nextInt();
-                sc.nextLine(); 
-                
-                // Check if employeeNumber exists in employees table
-                PreparedStatement pstmt = conn.prepareStatement("SELECT 1 FROM employees WHERE employeeNumber = ? FOR UPDATE");
-                pstmt.setInt(1, employeeNumber);
-                ResultSet rs = pstmt.executeQuery();
-                
-                if (rs.next()) {
-                    employeeExists = true;
-                    break;
-                } else {
-                    System.out.println("Error: Employee Number does not exist. Please try again.");
-                }
-                
-                rs.close();
-                pstmt.close();
-            }
-
-            System.out.println("Enter End Username:");
-            end_username = sc.nextLine();
-
-            System.out.println("Enter End User Reason:");
-            end_userreason = sc.nextLine();
-
-        
+            System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
-            CallableStatement cstmt = conn.prepareCall("CALL deactivateEmployee(?, ?, ?)");
-            cstmt.setInt(1, employeeNumber);
-            cstmt.setString(2, end_username);
-            cstmt.setString(3, end_userreason);
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
-            cstmt.executeUpdate();
+            conn.setAutoCommit(false);
 
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
@@ -274,6 +252,14 @@ public class Employees {
             pstmt = conn.prepareStatement("SELECT * FROM salesRepresentatives WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
+
+            CallableStatement cstmt = conn.prepareCall("CALL deactivateEmployee(?, ?, ?)");
+            cstmt.setInt(1, employeeNumber);
+            cstmt.setString(2, end_username);
+            cstmt.setString(3, end_userreason);
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+            cstmt.executeUpdate();
 
             conn.commit();
 
