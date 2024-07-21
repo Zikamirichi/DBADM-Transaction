@@ -27,6 +27,14 @@ BEGIN
 	DECLARE employee_type ENUM('S','N');
     DECLARE employeeNumber1 INT;
     DECLARE forlock INT;
+   
+   DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+	BEGIN
+			ROLLBACK;
+		RESIGNAL;
+	END;
+	
+	START TRANSACTION;
 
 		IF p_employee_Type = 'Sales Representatives'  THEN
 			SET employee_type := 'S';
@@ -36,7 +44,6 @@ BEGIN
 			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80A2: Invalid employee type';
 		END IF;
 		
-	   
 		INSERT INTO employees (lastName, firstName, extension, email, jobTitle, employee_type, end_username, end_userreason)
 		VALUES (p_lastName, p_firstName, p_extension, p_email, p_jobTitle, employee_type, p_end_username, p_end_userreason);
 		
@@ -53,10 +60,15 @@ BEGIN
 		ELSE
 			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80A2: Invalid employee type';
 		END IF;
+	
+	DO SLEEP(15);
+	COMMIT; 
 END$$
 
 DELIMITER ;
 ;
+
+
 
 
 
@@ -143,6 +155,243 @@ END$$
 
 DELIMITER ;
 ;
+
+DROP TRIGGER IF EXISTS `DBSALES26_G208`.`employees_BEFORE_UPDATE`;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` TRIGGER `employees_BEFORE_UPDATE` BEFORE UPDATE ON `employees` FOR EACH ROW BEGIN
+	DECLARE forLock INT;
+	-- Ensures that deactivated accounts cannot be modified
+	IF (old.is_deactivated = 1) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Deactivated Records cannot be modified!';
+        
+	-- Checks if employeeNumber, firstName, or lastName is modified.
+	ELSEIF (old.lastName!=new.lastName) OR (old.firstName!=new.firstName) OR (old.employeeNumber!=new.employeeNumber) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Employee Last Name, First Name, Number cannot be modified!';
+	END IF;
+    
+    IF OLD.employee_type != NEW.employee_type THEN
+        IF isWithin_dateRange(OLD.employeeNumber) = 1 THEN
+        	SELECT COUNT(1) INTO forLock FROM salesRepAssignments WHERE employeeNumber = old.employeeNumber FOR UPDATE;
+            UPDATE salesRepAssignments 
+            SET `endDate` = CURDATE() 
+            WHERE employeeNumber = OLD.employeeNumber; 
+        END IF;
+    END IF;
+END$$
+DELIMITER ;
+
+
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `employeeTypeToInventoryManagers`;
+
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `DBSALES26_G208`.`employeeTypeToInventoryManagers`;
+;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` PROCEDURE `employeeTypeToInventoryManagers`(
+	IN p_employeeNumber INT,
+    IN p_deptCode INT
+)
+BEGIN
+	DECLARE v_currentType SMALLINT(1);
+    
+   	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+	BEGIN
+			ROLLBACK;
+		RESIGNAL;
+	END;
+	
+	START TRANSACTION;
+    
+    /*
+		1 - sales_representatives
+        2 - sales_managers
+        3 - inventory_managers
+    */
+    
+    -- Get the current employee type
+    SET v_currentType := getEmployeeType(p_employeeNumber);
+
+    -- Ensure the new type is different from the current type
+    IF v_currentType = 3 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80Z1: New employee type must be different from the current employee type.';
+    END IF;
+	
+    SELECT * FROM employees WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+   
+    -- Remove from the current type table    
+    CASE v_currentType
+        WHEN 1 THEN
+            DELETE FROM salesRepresentatives WHERE employeeNumber = p_employeeNumber;
+            INSERT INTO Non_SalesRepresentatives (employeeNumber, deptCode) VALUES (p_employeeNumber, p_deptCode);
+            SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+        WHEN 2 THEN
+            DELETE FROM sales_managers WHERE employeeNumber = p_employeeNumber;
+		WHEN 3 THEN
+            DELETE FROM inventory_managers WHERE employeeNumber = p_employeeNumber;
+		ELSE
+			INSERT INTO Non_SalesRepresentatives (employeeNumber, deptCode) VALUES (p_employeeNumber, p_deptCode);
+			SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+    END CASE;
+	
+    
+   
+    -- Add to the new type table
+    INSERT INTO inventory_managers (employeeNumber) VALUES (p_employeeNumber);
+
+    -- Update the employee's type in the employees table
+    UPDATE employees SET employee_type = 'N' WHERE employeeNumber = p_employeeNumber;
+        
+	DO SLEEP(15);
+	COMMIT; 
+
+END$$
+
+DELIMITER ;
+;
+
+
+
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `employeeTypeToSalesManager`;
+
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `DBSALES26_G208`.`employeeTypeToSalesManager`;
+;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` PROCEDURE `employeeTypeToSalesManager`(
+	IN p_employeeNumber INT,
+    IN p_deptCode INT
+)
+BEGIN
+	DECLARE v_currentType SMALLINT(1);
+    
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+	BEGIN
+			ROLLBACK;
+		RESIGNAL;
+	END;
+	
+	START TRANSACTION;
+    
+    /*
+		1 - sales_representatives
+        2 - sales_managers
+        3 - inventory_managers
+    */
+    
+    -- Get the current employee type
+    SET v_currentType := getEmployeeType(p_employeeNumber);
+
+    -- Ensure the new type is different from the current type
+    IF v_currentType = 2 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80Z1: New employee type must be different from the current employee type.';
+    END IF;
+	
+    SELECT * FROM employees WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+   
+    -- Remove from the current type table
+    CASE v_currentType
+        WHEN 1 THEN
+            DELETE FROM salesRepresentatives WHERE employeeNumber = p_employeeNumber;
+            INSERT INTO Non_SalesRepresentatives (employeeNumber, deptCode) VALUES (p_employeeNumber, p_deptCode);
+            SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+        WHEN 2 THEN
+            DELETE FROM sales_managers WHERE employeeNumber = p_employeeNumber;
+		WHEN 3 THEN
+            DELETE FROM inventory_managers WHERE employeeNumber = p_employeeNumber;
+		ELSE
+			INSERT INTO Non_SalesRepresentatives (employeeNumber, deptCode) VALUES (p_employeeNumber, p_deptCode);
+			SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+    END CASE;
+
+    -- Add to the new type table
+    INSERT INTO sales_managers (employeeNumber) VALUES (p_employeeNumber);
+
+    -- Update the employee's type in the employees table
+    UPDATE employees SET employee_type = 'N' WHERE employeeNumber = p_employeeNumber;
+        
+    DO SLEEP(15); 
+	COMMIT;
+END$$
+
+DELIMITER ;
+;
+
+
+
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `employeeTypeToSalesRepresentative`;
+
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `DBSALES26_G208`.`employeeTypeToSalesRepresentative`;
+;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` PROCEDURE `employeeTypeToSalesRepresentative`(
+	IN p_employeeNumber INT
+)
+BEGIN
+	DECLARE v_currentType SMALLINT(1);
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+	BEGIN
+			ROLLBACK;
+		RESIGNAL;
+	END;
+	
+	START TRANSACTION;
+    
+    /*
+		1 - sales_representatives
+        2 - sales_managers
+        3 - inventory_managers
+    */
+    
+    -- Get the current employee type
+    SET v_currentType := getEmployeeType(p_employeeNumber);
+
+    -- Ensure the new type is different from the current type
+    IF v_currentType = 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80Z1: New employee type must be different from the current employee type.';
+    END IF;
+	
+    SELECT * FROM employees WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+   
+    -- Remove from the current type table
+    CASE v_currentType
+        WHEN 1 THEN
+            DELETE FROM salesRepresentatives WHERE employeeNumber = p_employeeNumber;
+        WHEN 2 THEN
+            DELETE FROM sales_managers WHERE employeeNumber = p_employeeNumber;
+            DELETE FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber;
+            SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+		WHEN 3 THEN
+            DELETE FROM inventory_managers WHERE employeeNumber = p_employeeNumber;
+            DELETE FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber;
+            SELECT * FROM Non_SalesRepresentatives WHERE employeeNumber = p_employeeNumber FOR UPDATE;
+    END CASE;
+
+    -- Add to the new type table
+	INSERT INTO salesRepresentatives (employeeNumber) VALUES (p_employeeNumber);
+
+    -- Update the employee's type in the employees table
+    UPDATE employees SET employee_type = 'S' WHERE employeeNumber = p_employeeNumber;
+        
+	DO SLEEP(15);
+	COMMIT; 
+END$$
+
+DELIMITER ;
+;
+
+
 
 -- for resignEmployee function in java
 -- deactivateEmployee procedure (employees and salesRepAssignments are WRITE LOCK)
