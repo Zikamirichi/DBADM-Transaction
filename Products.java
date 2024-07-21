@@ -170,28 +170,28 @@ public class Products {
     public int updateProduct() {
         Scanner sc = new Scanner(System.in);
         Connection conn = null;
-
+    
         try {
             conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
-
+    
             System.out.println("Enter Product Code:");
             productCode = sc.nextLine();
-
+    
             PreparedStatement selectStmt = conn.prepareStatement(
                 "SELECT * FROM products WHERE productCode = ? FOR UPDATE");
             selectStmt.setString(1, productCode);
-
+    
             ResultSet rs = selectStmt.executeQuery();
-
+    
             if (rs.next()) {
                 productName = rs.getString("productName");
                 productVendor = rs.getString("productVendor");
                 productDescription = rs.getString("productDescription");
                 buyPrice = rs.getDouble("buyPrice");
                 productCategory = rs.getString("product_category");
-
+    
                 System.out.println("Product Details:\n");
                 System.out.println("Product Name: " + productName);
                 System.out.println("Product Vendor: " + productVendor);
@@ -199,22 +199,20 @@ public class Products {
                 System.out.println("Buy Price: " + buyPrice);
                 System.out.println("Product Category: " + productCategory);
                 System.out.println("\nEnter new details for the product:");
-
+    
                 System.out.println("Enter Product Name:");
                 productName = sc.nextLine();
-
+    
                 System.out.println("Enter Product Vendor:");
                 productVendor = sc.nextLine();
-
+    
                 System.out.println("Enter Product Description:");
                 productDescription = sc.nextLine();
-
+    
                 System.out.println("Enter Buy Price:");
                 buyPrice = sc.nextDouble();
-
-                System.out.println("Discontinue product? (C for Continue, D for Discontinue):");
-                productCategory = sc.next().toUpperCase();
-
+                sc.nextLine(); // Consume the newline character
+    
                 PreparedStatement updateStmt = conn.prepareStatement(
                     "UPDATE products SET productName = ?, productVendor = ?, productDescription = ?, buyPrice = ?, product_category = ? WHERE productCode = ?");
                 updateStmt.setString(1, productName);
@@ -223,32 +221,28 @@ public class Products {
                 updateStmt.setDouble(4, buyPrice);
                 updateStmt.setString(5, productCategory);
                 updateStmt.setString(6, productCode);
-
+    
                 System.out.println("\nPress enter key to start updating the product");
                 sc.nextLine();
-                sc.nextLine(); // Consume the newline character
-
+    
                 updateStmt.executeUpdate();
-
-                System.out.println("\nProduct updated successfully.");
-                System.out.println("\nPress enter key to end transaction");
-                sc.nextLine();
-
-                conn.commit();
-
                 updateStmt.close();
+    
+                System.out.println("\nProduct updated successfully.");
+    
+                conn.commit();
             } else {
                 System.out.println("Product not found.");
             }
-
+    
             rs.close();
             selectStmt.close();
             conn.close();
-
+    
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-
+    
             try {
                 if (conn != null) {
                     conn.rollback();
@@ -256,7 +250,109 @@ public class Products {
             } catch (SQLException rollbackEx) {
                 System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
             }
+    
+            return 0;
+        }
+    }
 
+    public int discontinueOrReintroduceProduct() {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = null;
+    
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+    
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+    
+            System.out.println("Discontinue or Reintroduce product? (D for Discontinue, C for Continue):");
+            productCategory = sc.next().toUpperCase();
+            sc.nextLine(); // Consume the newline character
+    
+            if ("D".equals(productCategory)) {
+                System.out.println("Enter Inventory Manager ID:");
+                int inventoryManagerId = sc.nextInt();
+                sc.nextLine(); // Consume the newline character
+    
+                // Check if the inventory manager exists in the inventory_managers table
+                PreparedStatement checkManagerStmt = conn.prepareStatement(
+                    "SELECT 1 FROM inventory_managers WHERE employeeNumber = ?");
+                checkManagerStmt.setInt(1, inventoryManagerId);
+    
+                ResultSet managerRs = checkManagerStmt.executeQuery();
+                if (!managerRs.next()) {
+                    System.out.println("Error: Inventory Manager ID not found in inventory_managers. Please ensure the ID is correct.");
+                    managerRs.close();
+                    checkManagerStmt.close();
+                    conn.rollback();
+                    return 0;
+                }
+                managerRs.close();
+                checkManagerStmt.close();
+    
+                System.out.println("Enter reason for discontinuation:");
+                String reason = sc.nextLine();
+    
+                System.out.println("Enter your username:");
+                String endUsername = sc.nextLine();
+    
+                System.out.println("Enter reason for update:");
+                String endUserReason = sc.nextLine();
+    
+                CallableStatement discontinueStmt = conn.prepareCall("{CALL discontinue_product(?, ?, ?, ?, ?)}");
+                discontinueStmt.setString(1, productCode);
+                discontinueStmt.setInt(2, inventoryManagerId);
+                discontinueStmt.setString(3, reason);
+                discontinueStmt.setString(4, endUsername);
+                discontinueStmt.setString(5, endUserReason);
+    
+                System.out.println("\nPress enter key to discontinue the product");
+                sc.nextLine();
+    
+                discontinueStmt.executeUpdate();
+                discontinueStmt.close();
+    
+                System.out.println("\nProduct discontinued successfully.");
+            } else if ("C".equals(productCategory)) {
+                System.out.println("Enter your username:");
+                String endUsername = sc.nextLine();
+    
+                System.out.println("Enter reason for update:");
+                String endUserReason = sc.nextLine();
+    
+                CallableStatement reintroduceStmt = conn.prepareCall("{CALL reintroduce_product(?, ?, ?)}");
+                reintroduceStmt.setString(1, productCode);
+                reintroduceStmt.setString(2, endUsername);
+                reintroduceStmt.setString(3, endUserReason);
+    
+                System.out.println("\nPress enter key to reintroduce the product");
+                sc.nextLine();
+    
+                reintroduceStmt.executeUpdate();
+                reintroduceStmt.close();
+    
+                System.out.println("\nProduct reintroduced successfully.");
+            } else {
+                System.out.println("Invalid choice. Please enter 'D' for Discontinue or 'C' for Continue.");
+            }
+    
+            conn.commit();
+            conn.close();
+    
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+    
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException rollbackEx) {
+                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
+    
             return 0;
         }
     }
@@ -337,16 +433,13 @@ public class Products {
             return 0;
         }
     }
-    
-    
-    
 
     public static void main(String args[]) {
         Scanner sc = new Scanner(System.in);
         int choice = 0;
 
         System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
-                "[3] Update Product\n[4] View a Product with its MSRP Price Range");
+                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product");
         choice = sc.nextInt();
         Products p = new Products();
 
@@ -354,6 +447,7 @@ public class Products {
         if (choice == 2) p.classifyProductIntoMultipleProductLines();
         if (choice == 3) p.updateProduct();
         if (choice == 4) p.viewProductsWithPriceRange();
+        if (choice == 5) p.discontinueOrReintroduceProduct();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
