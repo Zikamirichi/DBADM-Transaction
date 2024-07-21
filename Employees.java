@@ -57,7 +57,7 @@ public class Employees {
 
             // Fetch job titles from database
             System.out.println("Select a Job Title:");
-            String jobTitlesQuery = "SELECT jobTitle FROM employees_jobtitles LOCK IN SHARE MODE";
+            String jobTitlesQuery = "SELECT jobTitle FROM employees_jobTitles LOCK IN SHARE MODE";
             PreparedStatement pstmt = conn.prepareStatement(jobTitlesQuery);
             ResultSet rs = pstmt.executeQuery();
 
@@ -73,7 +73,7 @@ public class Employees {
             sc.nextLine();
 
             // Retrieve selected job title based on user's choice
-            pstmt = conn.prepareStatement("SELECT jobTitle FROM employees_jobtitles LIMIT ?, 1");
+            pstmt = conn.prepareStatement("SELECT jobTitle FROM employees_jobTitles LIMIT ?, 1");
             pstmt.setInt(1, choice - 1); //SQL is 0 based index
             rs= pstmt.executeQuery();
 
