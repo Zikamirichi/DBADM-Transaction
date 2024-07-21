@@ -215,40 +215,24 @@ public class Employees {
         // i used for update in tables that should be deleted
 
         Scanner sc = new Scanner(System.in);
-        int employeeNumber = 0;
-        boolean employeeExists = false;
+
+        System.out.println("Enter Employee Number:");
+        employeeNumber = sc.nextInt();
+        sc.nextLine();
+       
+        System.out.println("Enter End Username:");
+        end_username = sc.nextLine();
+
+        System.out.println("Enter End User Reason:");
+        end_userreason = sc.nextLine();
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
-            
-            while (true) {
-                System.out.println("Enter Employee Number:");
-                employeeNumber = sc.nextInt();
-                sc.nextLine(); 
-                
-                // Check if employeeNumber exists in employees table
-                PreparedStatement pstmt = conn.prepareStatement("SELECT 1 FROM employees WHERE employeeNumber = ? FOR UPDATE");
-                pstmt.setInt(1, employeeNumber);
-                ResultSet rs = pstmt.executeQuery();
-                
-                if (rs.next()) {
-                    employeeExists = true;
-                    break;
-                } else {
-                    System.out.println("Error: Employee Number does not exist. Please try again.");
-                }
-                
-                rs.close();
-                pstmt.close();
-            }
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
 
-            System.out.println("Enter End Username:");
-            end_username = sc.nextLine();
-
-            System.out.println("Enter End User Reason:");
-            end_userreason = sc.nextLine();
-
-        
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
             conn.setAutoCommit(false);
 
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
@@ -274,8 +258,6 @@ public class Employees {
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
             cstmt.executeUpdate();
-
-            
 
             conn.commit();
 
