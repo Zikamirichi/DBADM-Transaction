@@ -1,180 +1,337 @@
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Products {
-    int productId;
+    String productCode;
     String productName;
-    double msrp;
-    String category;
-    String status;
+    String productScale;
+    String productVendor;
+    String productDescription;
+    int quantityInStock;
+    double buyPrice;
+    double MSRP;
+    String productType;
     String productLine;
-
-    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+    String endUsername;
+    String endUserReason;
+    String productCategory; // 'C' for Continued Product, 'D' for Discontinued Product
 
     public Products() {}
 
     public int createProduct() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Product Name:");
-        productName = sc.nextLine();
+        Connection conn = null;
 
-        System.out.println("Enter MSRP:");
-        msrp = sc.nextDouble();
-        sc.nextLine();  // Consume newline
-
-        System.out.println("Enter Category:");
-        category = sc.nextLine();
-
-        rwLock.writeLock().lock();
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g203?useTimezone=true&serverTimezone=UTC&user=root&password=12345")) {
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
             System.out.println("Connection Successful");
-            String query = "INSERT INTO products (productName, MSRP, category, status) VALUES (?, ?, ?, 'Current')";
-            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                pstmt.setString(1, productName);
-                pstmt.setDouble(2, msrp);
-                pstmt.setString(3, category);
-                pstmt.executeUpdate();
-                System.out.println("Product created successfully.");
-            }
+            conn.setAutoCommit(false);
+
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            System.out.println("Enter Product Name:");
+            productName = sc.nextLine();
+
+            System.out.println("Enter Product Scale:");
+            productScale = sc.nextLine();
+
+            System.out.println("Enter Product Vendor:");
+            productVendor = sc.nextLine();
+
+            System.out.println("Enter Product Description:");
+            productDescription = sc.nextLine();
+
+            System.out.println("Enter Buy Price:");
+            buyPrice = sc.nextDouble();
+
+            System.out.println("Enter Product Type (R for Retail, W for Wholesale):");
+            productType = sc.next().toUpperCase();
+
+            System.out.println("Enter Quantity In Stock:");
+            quantityInStock = sc.nextInt();
+
+            System.out.println("Enter MSRP:");
+            MSRP = sc.nextDouble();
+
+            sc.nextLine(); // Consume the newline character
+
+            System.out.println("Enter Product Line:");
+            productLine = sc.nextLine();
+
+            System.out.println("Enter End Username:");
+            endUsername = sc.nextLine();
+
+            System.out.println("Enter End User Reason:");
+            endUserReason = sc.nextLine();
+
+            CallableStatement stmt = conn.prepareCall("{CALL add_product(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            stmt.setString(1, productCode);
+            stmt.setString(2, productName);
+            stmt.setString(3, productScale);
+            stmt.setString(4, productVendor);
+            stmt.setString(5, productDescription);
+            stmt.setDouble(6, buyPrice);
+            stmt.setString(7, productType);
+            stmt.setInt(8, quantityInStock);
+            stmt.setDouble(9, MSRP);
+            stmt.setString(10, productLine);
+            stmt.setString(11, endUsername);
+            stmt.setString(12, endUserReason);
+
+            System.out.println("\nPress enter key to start creating a product record");
+            sc.nextLine();
+
+            stmt.executeUpdate();
+
+            System.out.println("\nProduct record created successfully.");
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            conn.commit();
+
+            stmt.close();
+            conn.close();
+
+            return 1;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        } finally {
-            rwLock.writeLock().unlock();
-        }
-        return 1;
-    }
+            System.out.println("Error: " + e.getMessage());
 
-    public int classifyProduct() {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Product ID:");
-        productId = sc.nextInt();
-        sc.nextLine();  // Consume newline
-
-        System.out.println("Enter Product Lines (comma separated):");
-        String lines = sc.nextLine();
-        List<String> productLines = Arrays.asList(lines.split(","));
-
-        rwLock.writeLock().lock();
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g203?useTimezone=true&serverTimezone=UTC&user=root&password=12345")) {
-            System.out.println("Connection Successful");
-            String query = "INSERT INTO product_lines (productId, productLine) VALUES (?, ?)";
-            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                for (String line : productLines) {
-                    pstmt.setInt(1, productId);
-                    pstmt.setString(2, line.trim());
-                    pstmt.executeUpdate();
+            try {
+                if (conn != null) {
+                    conn.rollback();
                 }
-                System.out.println("Product classified into multiple lines successfully.");
+            } catch (SQLException rollbackEx) {
+                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
             return 0;
-        } finally {
-            rwLock.writeLock().unlock();
         }
-        return 1;
     }
 
-    public int updateProductStatus() {
+    public int classifyProductIntoMultipleProductLines() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Product ID:");
-        productId = sc.nextInt();
-        sc.nextLine();  // Consume newline
+        Connection conn = null;
 
-        System.out.println("Discontinue Product? (true/false):");
-        boolean discontinue = sc.nextBoolean();
-
-        rwLock.writeLock().lock();
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g203?useTimezone=true&serverTimezone=UTC&user=root&password=12345")) {
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
             System.out.println("Connection Successful");
-            String query = "UPDATE products SET status = ? WHERE productId = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                pstmt.setString(1, discontinue ? "Discontinued" : "Current");
-                pstmt.setInt(2, productId);
-                pstmt.executeUpdate();
-                System.out.println("Product status updated successfully.");
-            }
+            conn.setAutoCommit(false);
+
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            System.out.println("Enter New Product Line:");
+            productLine = sc.nextLine();
+
+            System.out.println("Enter End Username:");
+            endUsername = sc.nextLine();
+
+            System.out.println("Enter End User Reason:");
+            endUserReason = sc.nextLine();
+
+            PreparedStatement insertStmt = conn.prepareStatement(
+                "INSERT INTO product_productlines (productCode, productLine, end_username, end_userreason) VALUES (?, ?, ?, ?)");
+            insertStmt.setString(1, productCode);
+            insertStmt.setString(2, productLine);
+            insertStmt.setString(3, endUsername);
+            insertStmt.setString(4, endUserReason);
+
+            System.out.println("\nPress enter key to start classifying the product into multiple product lines");
+            sc.nextLine();
+
+            insertStmt.executeUpdate();
+
+            System.out.println("\nProduct classified into multiple product lines successfully.");
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            conn.commit();
+
+            insertStmt.close();
+            conn.close();
+
+            return 1;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        } finally {
-            rwLock.writeLock().unlock();
-        }
-        return 1;
-    }
+            System.out.println("Error: " + e.getMessage());
 
-    public int viewProductsInPriceRange() {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Minimum MSRP:");
-        double minPrice = sc.nextDouble();
-        System.out.println("Enter Maximum MSRP:");
-        double maxPrice = sc.nextDouble();
-
-        rwLock.readLock().lock();
-        List<String> products = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g203?useTimezone=true&serverTimezone=UTC&user=root&password=12345")) {
-            System.out.println("Connection Successful");
-            String query = "SELECT productName FROM products WHERE MSRP BETWEEN ? AND ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                pstmt.setDouble(1, minPrice);
-                pstmt.setDouble(2, maxPrice);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        products.add(rs.getString("productName"));
-                    }
+            try {
+                if (conn != null) {
+                    conn.rollback();
                 }
+            } catch (SQLException rollbackEx) {
+                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        } finally {
-            rwLock.readLock().unlock();
-        }
 
-        System.out.println("Products in MSRP Range:");
-        for (String product : products) {
-            System.out.println(product);
+            return 0;
         }
-        return 1;
     }
 
-    public static void main(String[] args) {
-        Products pm = new Products();
+    public int updateProduct() {
         Scanner sc = new Scanner(System.in);
+        Connection conn = null;
 
-        while (true) {
-            System.out.println("\nProduct Management Menu");
-            System.out.println("1. Create a Product");
-            System.out.println("2. Classify Product into Multiple Product Lines");
-            System.out.println("3. Update Product Status (Discontinue or Continue)");
-            System.out.println("4. View Products with MSRP Range");
-            System.out.println("5. Exit");
-            System.out.print("Enter your choice: ");
-            int choice = sc.nextInt();
-            sc.nextLine();  // Consume newline
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
 
-            switch (choice) {
-                case 1:
-                    pm.createProduct();
-                    break;
-                case 2:
-                    pm.classifyProduct();
-                    break;
-                case 3:
-                    pm.updateProductStatus();
-                    break;
-                case 4:
-                    pm.viewProductsInPriceRange();
-                    break;
-                case 5:
-                    System.out.println("Exiting...");
-                    sc.close();
-                    return;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            PreparedStatement selectStmt = conn.prepareStatement(
+                "SELECT * FROM products WHERE productCode = ? FOR UPDATE");
+            selectStmt.setString(1, productCode);
+
+            ResultSet rs = selectStmt.executeQuery();
+
+            if (rs.next()) {
+                productName = rs.getString("productName");
+                productVendor = rs.getString("productVendor");
+                productDescription = rs.getString("productDescription");
+                buyPrice = rs.getDouble("buyPrice");
+                productCategory = rs.getString("product_category");
+
+                System.out.println("Product Details:\n");
+                System.out.println("Product Name: " + productName);
+                System.out.println("Product Vendor: " + productVendor);
+                System.out.println("Product Description: " + productDescription);
+                System.out.println("Buy Price: " + buyPrice);
+                System.out.println("Product Category: " + productCategory);
+                System.out.println("\nEnter new details for the product:");
+
+                System.out.println("Enter Product Name:");
+                productName = sc.nextLine();
+
+                System.out.println("Enter Product Vendor:");
+                productVendor = sc.nextLine();
+
+                System.out.println("Enter Product Description:");
+                productDescription = sc.nextLine();
+
+                System.out.println("Enter Buy Price:");
+                buyPrice = sc.nextDouble();
+
+                System.out.println("Discontinue product? (C for Continue, D for Discontinue):");
+                productCategory = sc.next().toUpperCase();
+
+                PreparedStatement updateStmt = conn.prepareStatement(
+                    "UPDATE products SET productName = ?, productVendor = ?, productDescription = ?, buyPrice = ?, product_category = ? WHERE productCode = ?");
+                updateStmt.setString(1, productName);
+                updateStmt.setString(2, productVendor);
+                updateStmt.setString(3, productDescription);
+                updateStmt.setDouble(4, buyPrice);
+                updateStmt.setString(5, productCategory);
+                updateStmt.setString(6, productCode);
+
+                System.out.println("\nPress enter key to start updating the product");
+                sc.nextLine();
+                sc.nextLine(); // Consume the newline character
+
+                updateStmt.executeUpdate();
+
+                System.out.println("\nProduct updated successfully.");
+                System.out.println("\nPress enter key to end transaction");
+                sc.nextLine();
+
+                conn.commit();
+
+                updateStmt.close();
+            } else {
+                System.out.println("Product not found.");
             }
+
+            rs.close();
+            selectStmt.close();
+            conn.close();
+
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException rollbackEx) {
+                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
+
+            return 0;
         }
+    }
+
+    public int viewProductsWithPriceRange() {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = null;
+    
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+    
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+    
+            PreparedStatement selectStmt = conn.prepareStatement(
+                "SELECT productName FROM products WHERE productCode = ? LOCK IN SHARE MODE");
+            selectStmt.setString(1, productCode);
+    
+            ResultSet rs = selectStmt.executeQuery();
+    
+            if (rs.next()) {
+                productName = rs.getString("productName");
+    
+                CallableStatement minPriceStmt = conn.prepareCall("{? = CALL getPrice(?, 'MIN')}");
+                CallableStatement maxPriceStmt = conn.prepareCall("{? = CALL getPrice(?, 'MAX')}");
+                
+                minPriceStmt.registerOutParameter(1, Types.DOUBLE);
+                minPriceStmt.setString(2, productCode);
+                minPriceStmt.execute();
+                
+                maxPriceStmt.registerOutParameter(1, Types.DOUBLE);
+                maxPriceStmt.setString(2, productCode);
+                maxPriceStmt.execute();
+                
+                double minPrice = minPriceStmt.getDouble(1);
+                double maxPrice = maxPriceStmt.getDouble(1);
+    
+                System.out.println("\nProduct Name: " + productName);
+                System.out.println("Minimum Price: " + minPrice);
+                System.out.println("Maximum Price: " + maxPrice);
+            } else {
+                System.out.println("Product not found.");
+            }
+    
+            rs.close();
+            selectStmt.close();
+            conn.commit();
+            conn.close();
+    
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
+    }
+    
+
+    public static void main(String args[]) {
+        Scanner sc = new Scanner(System.in);
+        int choice = 0;
+
+        System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
+                "[3] Update Product\n[4] View Products with Price Range MSRP");
+        choice = sc.nextInt();
+        Products p = new Products();
+
+        if (choice == 1) p.createProduct();
+        if (choice == 2) p.classifyProductIntoMultipleProductLines();
+        if (choice == 3) p.updateProduct();
+        if (choice == 4) p.viewProductsWithPriceRange();
+
+        System.out.println("Press enter key to continue....");
+        sc.nextLine();
+        sc.nextLine(); // Consume the newline character
     }
 }
