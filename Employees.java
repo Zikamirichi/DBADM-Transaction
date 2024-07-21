@@ -181,6 +181,8 @@ public class Employees {
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
     }
 
 
@@ -214,10 +216,9 @@ public class Employees {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
-
+           
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
-            conn.setAutoCommit(false);
 
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
@@ -239,8 +240,6 @@ public class Employees {
             cstmt.setInt(1, employeeNumber);
             cstmt.setString(2, end_username);
             cstmt.setString(3, end_userreason);
-            System.out.println("\nPress enter key to start transaction");
-            sc.nextLine();
             cstmt.executeUpdate();
 
             conn.commit();
