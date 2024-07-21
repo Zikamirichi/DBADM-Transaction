@@ -62,7 +62,7 @@ public class Employees {
             ResultSet rs = pstmt.executeQuery();
 
             int optionCount = 1;
-            while (jobTitlesRs.next()) {
+            while (rs.next()) {
                 String title = rs.getString("jobTitle");
                 System.out.println("[" + optionCount + "] " + title);
                 optionCount++;
