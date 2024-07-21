@@ -677,6 +677,7 @@ public class Employees {
         System.out.println("Enter New Department Manager Number:");
         deptManagerNumber = sc.nextInt();
 
+        sc.nextLine();
         System.out.println("Enter End Username:");
         end_username = sc.nextLine();
 
