@@ -288,6 +288,7 @@ public class Employees {
         quota = sc.nextDouble();
         System.out.println("Enter Sales Manager Number:");
         salesManagerNumber = sc.nextInt();
+        sc.nextLine();
         System.out.println("Enter End Username: ");
         end_username = sc.nextLine();
         System.out.println("Enter End User Reason: ");
