@@ -251,14 +251,14 @@ public class Employees {
             cstmt.setString(3, end_userreason);
             cstmt.executeUpdate();
 
+            System.out.println("Employee record has been updated successfully.");
+            System.out.println("\nPress enter key to end transaction");
+
             conn.commit();
 
             pstmt.close();
             cstmt.close();
             conn.close();
-
-            System.out.println("Employee record has been updated successfully.");
-            System.out.println("\nPress enter key to end transaction");
 
             return 1; // Success
         } catch (SQLException e) {
