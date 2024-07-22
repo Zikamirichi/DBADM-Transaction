@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.*;
+import java.math.BigDecimal;
 
 public class Products {
     String productCode;
