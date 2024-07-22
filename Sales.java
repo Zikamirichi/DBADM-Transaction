@@ -235,13 +235,24 @@ public class Sales {
             System.out.println("Press enter key to enter new values for order");
             sc.nextLine();
 
-            System.out.println("Enter status: ");
-            status = sc.nextLine();
+            System.out.println("Enter Required Date:");
+            requiredDate = sc.nextLine();
+
+            boolean isValid = false;
+            do {
+                System.out.println("Enter status: ");
+                status = sc.nextLine();
+                if (Objects.equals(status, "In Process") || Objects.equals(status, "Shipped") ||
+                        Objects.equals(status, "Cancelled") || Objects.equals(status, "Disputed") ||
+                        Objects.equals(status, "Resolved") || Objects.equals(status, "Completed"))
+                    isValid = true;
+
+            } while (!isValid);
 
             if (Objects.equals(status, "Shipped")) {
                 System.out.println("Enter Shipped Date: ");
                 shippedDate = sc.nextLine();
-            } else {
+            } else if (Objects.equals(status, "In Process")){
                 shippedDate = null;
             }
 
@@ -261,13 +272,14 @@ public class Sales {
                 pstmt.executeUpdate();
             }
 
-            pstmt = conn.prepareStatement ("UPDATE orders SET status=?,  shippedDate = ?, comments = ?, end_username=?, end_userreason=? WHERE orderNumber=?");
-            pstmt.setString(1,  status);
-            pstmt.setString(2, shippedDate);
-            pstmt.setString(3,  comments);
-            pstmt.setString(4, end_username);
-            pstmt.setString(5, end_userreason);
-            pstmt.setInt(6, Integer.parseInt(orderNumber));
+            pstmt = conn.prepareStatement ("UPDATE orders SET requiredDate=?, status=?,  shippedDate = ?, comments = ?, end_username=?, end_userreason=? WHERE orderNumber=?");
+            pstmt.setString(1,  requiredDate);
+            pstmt.setString(2,  status);
+            pstmt.setString(3, shippedDate);
+            pstmt.setString(4,  comments);
+            pstmt.setString(5, end_username);
+            pstmt.setString(6, end_userreason);
+            pstmt.setInt(7, Integer.parseInt(orderNumber));
             pstmt.executeUpdate();
 
 
