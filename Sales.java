@@ -254,6 +254,13 @@ public class Sales {
             System.out.println("Enter End User Reason: ");
             end_userreason = sc.nextLine();
 
+            if (Objects.equals(status, "Cancelled")) {
+                pstmt = conn.prepareStatement("UPDATE orderdetails SET end_username=?, end_userreason='Order Cancelled' WHERE orderNumber=?");
+                pstmt.setString(1, end_username);
+                pstmt.setInt(2, Integer.parseInt(orderNumber));
+                pstmt.executeUpdate();
+            }
+
             pstmt = conn.prepareStatement ("UPDATE orders SET status=?,  shippedDate = ?, comments = ?, end_username=?, end_userreason=? WHERE orderNumber=?");
             pstmt.setString(1,  status);
             pstmt.setString(2, shippedDate);
