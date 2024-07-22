@@ -228,8 +228,12 @@ public class Employees {
            
             System.out.println("\nPress enter key to start transaction");
             sc.nextLine();
+            
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
 
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
+            pstmt = conn.prepareStatement("SELECT * FROM inventory_managers WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
 
@@ -245,6 +249,10 @@ public class Employees {
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
 
+            pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? AND NOW() >= startDate AND NOW() <= endDate FOR UPDATE");
+            pstmt.setInt(1, employeeNumber);
+            pstmt.executeQuery();
+
             CallableStatement cstmt = conn.prepareCall("CALL deactivateEmployee(?, ?, ?)");
             cstmt.setInt(1, employeeNumber);
             cstmt.setString(2, end_username);
@@ -253,6 +261,7 @@ public class Employees {
 
             System.out.println("Employee record has been updated successfully.");
             System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
 
             conn.commit();
 

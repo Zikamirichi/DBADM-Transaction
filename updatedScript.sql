@@ -406,7 +406,6 @@ CREATE DEFINER=`DBADM_208`@`%` PROCEDURE `deactivateEmployee`(
 )
 BEGIN
 	DECLARE forLock INT;
-	SELECT COUNT(1) INTO forLock FROM employees FOR UPDATE;
 	UPDATE employees SET is_deactivated = 1, end_username = p_end_username, end_userreason = p_end_userreason where employeeNumber = p_employeeNumber;
     
     DELETE FROM inventory_managers WHERE employeeNumber= p_employeeNumber;
@@ -414,7 +413,6 @@ BEGIN
 	DELETE FROM Non_SalesRepresentatives WHERE employeeNumber= p_employeeNumber;
     DELETE FROM salesRepresentatives WHERE employeeNumber= p_employeeNumber;
     
-    SELECT COUNT(1) INTO forLock FROM salesRepAssignments FOR UPDATE;
     UPDATE salesRepAssignments SET endDate = CURDATE(), end_username = p_end_username, end_userreason = p_end_userreason
 	WHERE employeeNumber = p_employeeNumber AND NOW() >= startDate AND NOW() <= endDate;
 END$$
