@@ -1,4 +1,6 @@
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Employees {
@@ -328,6 +330,28 @@ public class Employees {
             pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, employeeNumber);
             pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? ORDER BY endDate DESC LIMIT 1 LOCK IN SHARE MODE");
+            pstmt.setInt(1, employeeNumber);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String lastEndDate = rs.getString("endDate");
+                // endDate format YYYY-MM-DD
+                // startDate format YYYY-MM-DD
+                
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                LocalDate formattedLastEndDate = LocalDate.parse(lastEndDate, formatter);
+                LocalDate formattedStartDate = LocalDate.parse(startDate, formatter);
+
+                if (lastEndDate.compareTo(startDate) > 0) {
+                    // add 1 day to lastEndDate
+                    formattedStartDate = formattedLastEndDate.plusDays(1);
+
+                    startDate = formattedStartDate.format(formatter);
+                }
+            }
 
             pstmt = conn.prepareStatement("INSERT INTO salesRepAssignments(employeeNumber, officeCode, startDate, endDate, reason, quota, salesManagerNumber, end_username, end_userreason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setInt(1, employeeNumber);
