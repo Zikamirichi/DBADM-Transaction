@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.*;
+import java.math.BigDecimal;
 
 public class Products {
     String productCode;
@@ -265,22 +266,6 @@ public class Products {
                 int inventoryManagerId = sc.nextInt();
                 sc.nextLine(); // Consume the newline character
     
-                // Check if the inventory manager exists in the inventory_managers table
-                PreparedStatement checkManagerStmt = conn.prepareStatement(
-                    "SELECT 1 FROM inventory_managers WHERE employeeNumber = ?");
-                checkManagerStmt.setInt(1, inventoryManagerId);
-    
-                ResultSet managerRs = checkManagerStmt.executeQuery();
-                if (!managerRs.next()) {
-                    System.out.println("Error: Inventory Manager ID not found in inventory_managers. Please ensure the ID is correct.");
-                    managerRs.close();
-                    checkManagerStmt.close();
-                    conn.rollback();
-                    return 0;
-                }
-                managerRs.close();
-                checkManagerStmt.close();
-    
                 System.out.println("Enter reason for discontinuation:");
                 String reason = sc.nextLine();
     
@@ -456,6 +441,49 @@ public class Products {
         }
     }
 
+    public int updateProductMSRP() {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = null;
+
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            System.out.println("Enter New MSRP:");
+            MSRP = sc.nextDouble();
+            sc.nextLine(); // Consume the newline character
+
+            System.out.println("Enter your username:");
+            endUsername = sc.nextLine();
+
+            System.out.println("Enter reason for update:");
+            endUserReason = sc.nextLine();
+
+            CallableStatement stmt = conn.prepareCall("{CALL update_product_msrp(?, ?, ?, ?)}");
+            stmt.setString(1, productCode);
+            stmt.setBigDecimal(2, BigDecimal.valueOf(MSRP));
+            stmt.setString(3, endUsername);
+            stmt.setString(4, endUserReason);
+
+            System.out.println("\nPress enter key to update the MSRP");
+            sc.nextLine();
+
+            stmt.executeUpdate();
+            stmt.close();
+
+            System.out.println("\nMSRP updated successfully.");
+            conn.close();
+
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
+    }
+
     public static void main(String args[]) {
         Scanner sc = new Scanner(System.in);
         int choice = 0;
@@ -470,7 +498,7 @@ public class Products {
         if (choice == 3) p.updateProduct();
         if (choice == 4) p.viewProductsWithPriceRange();
         if (choice == 5) p.discontinueOrReintroduceProduct();
-        if (choice == 6) p.updateMSRP();
+        if (choice == 6) p.updateProductMSRP();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
