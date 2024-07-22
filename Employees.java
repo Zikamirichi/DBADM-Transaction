@@ -96,6 +96,9 @@ public class Employees {
             System.out.println("Enter your reason:");
             end_userreason = sc.nextLine();
 
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
+
             String jobTitlesQuery = "SELECT * FROM employees_jobTitles LOCK IN SHARE MODE";
             PreparedStatement pstmt = conn.prepareStatement(jobTitlesQuery);
             pstmt.executeQuery();
@@ -170,6 +173,9 @@ public class Employees {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
+
+            System.out.println("\nPress enter key to start transaction");
+            sc.nextLine();
 
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? FOR UPDATE");
             pstmt.setInt(1, employeeNumber);
