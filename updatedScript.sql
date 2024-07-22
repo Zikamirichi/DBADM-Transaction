@@ -220,8 +220,6 @@ BEGIN
     IF v_currentType = 3 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80Z1: New employee type must be different from the current employee type.';
     END IF;
-	
-    SELECT * FROM employees WHERE employeeNumber = p_employeeNumber FOR UPDATE;
    
     -- Remove from the current type table    
     CASE v_currentType
@@ -293,8 +291,6 @@ BEGIN
     IF v_currentType = 2 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80Z1: New employee type must be different from the current employee type.';
     END IF;
-	
-    SELECT * FROM employees WHERE employeeNumber = p_employeeNumber FOR UPDATE;
    
     -- Remove from the current type table
     CASE v_currentType
@@ -361,8 +357,6 @@ BEGIN
     IF v_currentType = 1 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 80Z1: New employee type must be different from the current employee type.';
     END IF;
-	
-    SELECT * FROM employees WHERE employeeNumber = p_employeeNumber FOR UPDATE;
    
     -- Remove from the current type table
     CASE v_currentType
