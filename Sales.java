@@ -79,8 +79,17 @@ public class Sales {
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement(
+            System.out.println("Press enter key to start creating the data");
+            sc.nextLine();
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM orders_audit FOR UPDATE");
+            pstmt.executeQuery();
+
+
+
+            pstmt = conn.prepareStatement(
                     "INSERT INTO orders (`requiredDate`, `comments`, `customerNumber`, end_username, end_userreason) " +
                             "VALUES (?, ?, ?, ?, ?)");
 
@@ -89,10 +98,6 @@ public class Sales {
             pstmt.setInt(3, customerNumber);
             pstmt.setString(4, end_username);
             pstmt.setString(5, end_userreason);
-
-            System.out.println("Press enter key to start creating the data");
-            sc.nextLine();
-
 
             pstmt.executeUpdate();
 
@@ -141,8 +146,16 @@ public class Sales {
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
 
-            PreparedStatement pstmt = conn.prepareStatement(
+            System.out.println("Press enter key to start transaction");
+            sc.nextLine();
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM current_products WHERE productCode=?");
+            pstmt.setString(1, productCode);
+            pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement(
                     "INSERT INTO orderdetails (`orderNumber`, `productCode`, `quantityOrdered`, `priceEach`, `end_username`, `end_userreason`) " +
                             "VALUES (?, ?, ?, ?, ?, ?)");
 
@@ -162,6 +175,7 @@ public class Sales {
             sc.nextLine();
 
             pstmt.close();
+            conn.commit();
             conn.close();
 
             return 1;
@@ -331,6 +345,13 @@ public class Sales {
             System.out.println("Enter Reference Number (type -1 if this product isn't intended to be shipped): ");
             referenceNo = sc.nextInt();
             sc.nextLine();
+
+            pstmt = conn.prepareStatement(
+                    "SELECT * FROM shipments " +
+                            "WHERE referenceNo=? LOCK IN SHARE MODE ");
+
+            pstmt.setInt(1, referenceNo);
+            pstmt.executeQuery();
 
             System.out.println("Enter End Username: ");
             end_username = sc.nextLine();
