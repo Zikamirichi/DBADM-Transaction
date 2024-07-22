@@ -114,6 +114,9 @@ public class Products {
             System.out.println("Enter End User Reason:");
             endUserReason = sc.nextLine();
 
+            PreparedStatement lockProductStmt = conn.prepareStatement("SELECT * FROM products WHERE productCode = ? LOCK IN SHARE MODE"); 
+            lockProductStmt.setString(1, productCode);
+
             PreparedStatement insertStmt = conn.prepareStatement(
                 "INSERT INTO product_productlines (productCode, productLine, end_username, end_userreason) VALUES (?, ?, ?, ?)");
             insertStmt.setString(1, productCode);
@@ -124,6 +127,7 @@ public class Products {
             System.out.println("\nPress enter key to start classifying the product into multiple product lines");
             sc.nextLine();
 
+            lockProductStmt.executeQuery();
             insertStmt.executeUpdate();
 
             System.out.println("\nProduct classified into multiple product lines successfully.");
@@ -133,6 +137,7 @@ public class Products {
             conn.commit();
 
             insertStmt.close();
+            lockProductStmt.close();
             conn.close();
 
             return 1;
