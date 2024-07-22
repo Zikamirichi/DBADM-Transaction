@@ -79,16 +79,9 @@ public class Products {
             stmt.setString(11, endUsername);
             stmt.setString(12, endUserReason);
 
-            System.out.println("\nPress enter key to start creating a product record");
-            sc.nextLine();
-
             stmt.executeUpdate();
 
             System.out.println("\nProduct record created successfully.");
-            System.out.println("\nPress enter key to end transaction");
-            sc.nextLine();
-
-            conn.commit();
 
             stmt.close();
             conn.close();
