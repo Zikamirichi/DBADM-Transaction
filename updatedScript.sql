@@ -458,6 +458,7 @@ BEGIN
     
     START TRANSACTION;
     
+    SELECT * FROM productlines WHERE productLine = v_productLine LOCK IN SHARE MODE;
     -- Insert into products table
     INSERT INTO products (productCode, productName, productScale, productVendor, productDescription, buyPrice, productStatus, createdBy, createdReason) 
     VALUES (v_productCode, v_productName, v_productScale, v_productVendor, v_productDescription, v_buyprice, 'C', v_end_username, v_end_userreason);
@@ -490,6 +491,7 @@ BEGIN
     INSERT INTO product_productlines (productCode, productLine, createdBy, createdReason) 
     VALUES (v_productCode, v_productLine, v_end_username, v_end_userreason);
     
+    DO SLEEP(15);
     COMMIT;
     
     

@@ -89,15 +89,6 @@ public class Products {
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-
             return 0;
         }
     }
@@ -361,10 +352,9 @@ public class Products {
     
             System.out.println("Enter Product Code:");
             productCode = sc.nextLine();
-    
-            // Lock the current_products table to prevent other transactions from writing to it while this transaction is in progress
-            PreparedStatement lockStmt = conn.prepareStatement("LOCK TABLES current_products READ");
-            lockStmt.execute();
+            
+            System.out.println("\nPress enter key to view the product with its MSRP price range");
+            sc.nextLine();
     
             PreparedStatement selectStmt = conn.prepareStatement(
                 "SELECT p.productName, cp.product_type FROM products p JOIN current_products cp ON p.productCode = cp.productCode WHERE p.productCode = ? LOCK IN SHARE MODE");
@@ -412,10 +402,9 @@ public class Products {
     
             rs.close();
             selectStmt.close();
-    
-            // Unlock the tables after the transaction is done
-            PreparedStatement unlockStmt = conn.prepareStatement("UNLOCK TABLES");
-            unlockStmt.execute();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
     
             conn.commit();
             conn.close();
