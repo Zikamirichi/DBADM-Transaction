@@ -265,6 +265,22 @@ public class Products {
                 int inventoryManagerId = sc.nextInt();
                 sc.nextLine(); // Consume the newline character
     
+                // Check if the inventory manager exists in the inventory_managers table
+                PreparedStatement checkManagerStmt = conn.prepareStatement(
+                    "SELECT 1 FROM inventory_managers WHERE employeeNumber = ?");
+                checkManagerStmt.setInt(1, inventoryManagerId);
+    
+                ResultSet managerRs = checkManagerStmt.executeQuery();
+                if (!managerRs.next()) {
+                    System.out.println("Error: Inventory Manager ID not found in inventory_managers. Please ensure the ID is correct.");
+                    managerRs.close();
+                    checkManagerStmt.close();
+                    conn.rollback();
+                    return 0;
+                }
+                managerRs.close();
+                checkManagerStmt.close();
+    
                 System.out.println("Enter reason for discontinuation:");
                 String reason = sc.nextLine();
     
@@ -317,6 +333,61 @@ public class Products {
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
     
+            return 0;
+        }
+    }
+
+    public int updateMSRP() {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = null;
+
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            System.out.println("Enter new MSRP:");
+            double newMSRP = sc.nextDouble();
+            sc.nextLine(); // Consume the newline character
+
+            System.out.println("Enter your username:");
+            String endUsername = sc.nextLine();
+
+            System.out.println("Enter reason for update:");
+            String endUserReason = sc.nextLine();
+
+            CallableStatement updateMSRPStmt = conn.prepareCall("{CALL update_product_msrp(?, ?, ?, ?)}");
+            updateMSRPStmt.setString(1, productCode);
+            updateMSRPStmt.setDouble(2, newMSRP);
+            updateMSRPStmt.setString(3, endUsername);
+            updateMSRPStmt.setString(4, endUserReason);
+
+            System.out.println("\nPress enter key to update the MSRP");
+            sc.nextLine();
+
+            updateMSRPStmt.executeUpdate();
+            updateMSRPStmt.close();
+
+            System.out.println("\nMSRP updated successfully.");
+
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException rollbackEx) {
+                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
+
             return 0;
         }
     }
@@ -401,7 +472,7 @@ public class Products {
         int choice = 0;
 
         System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
-                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product");
+                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product\n[6] Update MSRP");
         choice = sc.nextInt();
         Products p = new Products();
 
@@ -410,6 +481,7 @@ public class Products {
         if (choice == 3) p.updateProduct();
         if (choice == 4) p.viewProductsWithPriceRange();
         if (choice == 5) p.discontinueOrReintroduceProduct();
+        if (choice == 6) p.updateMSRP();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
