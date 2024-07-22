@@ -458,10 +458,6 @@ BEGIN
     
     START TRANSACTION;
     
-    -- Lock the row to ensure it cannot be modified by other transactions
-    SELECT * FROM products WHERE productCode = v_productCode FOR UPDATE;
-    SELECT * FROM current_products WHERE productCode = v_productCode FOR UPDATE;
-    
     -- Insert into products table
     INSERT INTO products (productCode, productName, productScale, productVendor, productDescription, buyPrice, productStatus, createdBy, createdReason) 
     VALUES (v_productCode, v_productName, v_productScale, v_productVendor, v_productDescription, v_buyprice, 'C', v_end_username, v_end_userreason);
