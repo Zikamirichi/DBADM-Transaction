@@ -356,7 +356,6 @@ public class Products {
             updateMSRPStmt.executeUpdate();
             updateMSRPStmt.close();
 
-            conn.commit();
             conn.close();
 
             return 1;
