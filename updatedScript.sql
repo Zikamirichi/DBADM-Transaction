@@ -643,9 +643,9 @@ BEGIN
     END;
 
     START TRANSACTION;
-
+    
     -- Check if the user is an inventory manager
-    IF NOT EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = p_inventoryManagerId) THEN
+    IF NOT EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = p_inventoryManagerId LOCK IN SHARE MODE) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z1: Only inventory managers can discontinue products.';
     END IF;
 
@@ -654,6 +654,8 @@ BEGIN
     IF productExists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z2: Product not found in current products.';
     END IF;
+
+    SELECT * FROM products WHERE productCode = p_productCode FOR UPDATE;
 
     -- Update product_category to discontinued in products
     UPDATE products SET product_category = 'D' WHERE productCode = p_productCode;
@@ -699,6 +701,8 @@ BEGIN
     IF productExists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z2: Product not found in discontinued products.';
     END IF;
+
+    SELECT * FROM products WHERE productCode = p_productCode FOR UPDATE;
 
     -- Update product_category to current in products
     UPDATE products SET product_category = 'C' WHERE productCode = p_productCode;

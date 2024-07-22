@@ -265,22 +265,6 @@ public class Products {
                 int inventoryManagerId = sc.nextInt();
                 sc.nextLine(); // Consume the newline character
     
-                // Check if the inventory manager exists in the inventory_managers table
-                PreparedStatement checkManagerStmt = conn.prepareStatement(
-                    "SELECT 1 FROM inventory_managers WHERE employeeNumber = ?");
-                checkManagerStmt.setInt(1, inventoryManagerId);
-    
-                ResultSet managerRs = checkManagerStmt.executeQuery();
-                if (!managerRs.next()) {
-                    System.out.println("Error: Inventory Manager ID not found in inventory_managers. Please ensure the ID is correct.");
-                    managerRs.close();
-                    checkManagerStmt.close();
-                    conn.rollback();
-                    return 0;
-                }
-                managerRs.close();
-                checkManagerStmt.close();
-    
                 System.out.println("Enter reason for discontinuation:");
                 String reason = sc.nextLine();
     
@@ -327,20 +311,11 @@ public class Products {
                 System.out.println("Invalid choice. Please enter 'D' for Discontinue or 'C' for Continue.");
             }
     
-            conn.commit();
             conn.close();
     
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-    
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
     
             return 0;
         }
