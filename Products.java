@@ -371,23 +371,12 @@ public class Products {
             updateMSRPStmt.executeUpdate();
             updateMSRPStmt.close();
 
-            System.out.println("\nMSRP updated successfully.");
-
             conn.commit();
             conn.close();
 
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-
             return 0;
         }
     }

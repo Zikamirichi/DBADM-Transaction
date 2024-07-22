@@ -731,25 +731,29 @@ CREATE PROCEDURE update_product_msrp(
 )
 BEGIN
     DECLARE curr_productType CHAR(1);
-    DECLARE oldEndDate DATE;
+	
+   DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+		BEGIN
+			ROLLBACK;
+			RESIGNAL;
+		END;
+		
+	START TRANSACTION;
+
+	SELECT * FROM products WHERE productCode = p_productCode LOCK IN SHARE MODE;
+	SELECT * FROM product_wholesale WHERE productCode = p_productCode FOR UPDATE;
+	SELECT * FROM product_pricing WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate FOR UPDATE;
 
     -- Check product type
     SELECT product_type INTO curr_productType
     FROM current_products
-    WHERE productCode = p_productCode;
+    WHERE productCode = p_productCode LOCK IN SHARE MODE;
 
     IF curr_productType = 'R' THEN
-        -- For retail products, end the current pricing and add a new record
-        SELECT endDate INTO oldEndDate
-        FROM product_pricing
-        WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate;
-        
         UPDATE product_pricing
-        SET endDate = CURDATE(), end_username = p_end_username, end_userreason = p_end_userreason
+        SET MSRP = p_MSRP, end_username = p_end_username, end_userreason = p_end_userreason
         WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate;
 
-        INSERT INTO product_pricing (productCode, startDate, endDate, MSRP, end_username, end_userreason)
-        VALUES (p_productCode, DATE_ADD(CURDATE(), INTERVAL 1 DAY), oldEndDate, p_MSRP, p_end_username, p_end_userreason);
 
     ELSEIF curr_productType = 'W' THEN
         -- For wholesale products, update the product_wholesale table
@@ -759,6 +763,8 @@ BEGIN
     ELSE
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR: Invalid product type.';
     END IF;
+   
+   COMMIT;
 END$$
 
 DELIMITER ;
