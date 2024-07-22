@@ -66,6 +66,9 @@ public class Products {
             System.out.println("Enter End User Reason:");
             endUserReason = sc.nextLine();
 
+            System.out.println("\nPress enter key to create the product record");
+            sc.nextLine();
+
             CallableStatement stmt = conn.prepareCall("{CALL add_product(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             stmt.setString(1, productCode);
             stmt.setString(2, productName);
@@ -114,7 +117,7 @@ public class Products {
 
             System.out.println("Enter End User Reason:");
             endUserReason = sc.nextLine();
-
+            
             PreparedStatement lockProductStmt = conn.prepareStatement("SELECT * FROM products WHERE productCode = ? LOCK IN SHARE MODE"); 
             lockProductStmt.setString(1, productCode);
 
@@ -168,7 +171,10 @@ public class Products {
     
             System.out.println("Enter Product Code:");
             productCode = sc.nextLine();
-    
+            
+            System.out.println("\nPress enter key to start the transaction");
+            sc.nextLine();
+
             PreparedStatement selectStmt = conn.prepareStatement(
                 "SELECT * FROM products WHERE productCode = ? FOR UPDATE");
             selectStmt.setString(1, productCode);
