@@ -717,6 +717,52 @@ DELIMITER ;
 ;
 
 
+-- update_product_msrp
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `update_product_msrp`;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE PROCEDURE update_product_msrp(
+    IN p_productCode VARCHAR(15),
+    IN p_MSRP DECIMAL(9,2),
+    IN p_end_username VARCHAR(45),
+    IN p_end_userreason VARCHAR(45)
+)
+BEGIN
+    DECLARE curr_productType CHAR(1);
+    DECLARE oldEndDate DATE;
+
+    -- Check product type
+    SELECT product_type INTO curr_productType
+    FROM current_products
+    WHERE productCode = p_productCode;
+
+    IF curr_productType = 'R' THEN
+        -- For retail products, end the current pricing and add a new record
+        SELECT endDate INTO oldEndDate
+        FROM product_pricing
+        WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate;
+        
+        UPDATE product_pricing
+        SET endDate = CURDATE(), end_username = p_end_username, end_userreason = p_end_userreason
+        WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate;
+
+        INSERT INTO product_pricing (productCode, startDate, endDate, MSRP, end_username, end_userreason)
+        VALUES (p_productCode, DATE_ADD(CURDATE(), INTERVAL 1 DAY), oldEndDate, p_MSRP, p_end_username, p_end_userreason);
+
+    ELSEIF curr_productType = 'W' THEN
+        -- For wholesale products, update the product_wholesale table
+        UPDATE product_wholesale
+        SET MSRP = p_MSRP, end_username = p_end_username, end_userreason = p_end_userreason
+        WHERE productCode = p_productCode;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR: Invalid product type.';
+    END IF;
+END$$
+
+DELIMITER ;
+
 
 
 
