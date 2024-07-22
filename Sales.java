@@ -77,7 +77,7 @@ public class Sales {
         // TODO determine get previous assignment or newly?
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
 
             PreparedStatement pstmt = conn.prepareStatement(
@@ -89,6 +89,9 @@ public class Sales {
             pstmt.setInt(3, customerNumber);
             pstmt.setString(4, end_username);
             pstmt.setString(5, end_userreason);
+
+            System.out.println("Press enter key to start creating the data");
+            sc.nextLine();
 
 
             pstmt.executeUpdate();
@@ -136,7 +139,7 @@ public class Sales {
         // TODO determine get previous assignment or newly?
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
 
             PreparedStatement pstmt = conn.prepareStatement(
@@ -176,7 +179,7 @@ public class Sales {
         // TODO determine get previous assignment or newly?
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -273,7 +276,7 @@ public class Sales {
         // TODO determine get previous assignment or newly?
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
@@ -381,14 +384,14 @@ public class Sales {
         // TODO determine get previous assignment or newly?
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
             PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT * FROM orders JOIN orderdetails ON orders.orderNumber = orderdetails.orderNumber " +
-                            "JOIN  current_products ON orderdetails.productCode = current_products.productCode " +
-                            "JOIN  products ON current_products.productCode = products.productCode " +
+                    "SELECT * FROM orders LEFT JOIN orderdetails ON orders.orderNumber = orderdetails.orderNumber " +
+                            "LEFT JOIN  current_products ON orderdetails.productCode = current_products.productCode " +
+                            "LEFT JOIN  products ON current_products.productCode = products.productCode " +
                             "WHERE orders.orderNumber = ? LOCK IN SHARE MODE ");
 
             pstmt.setInt(1, Integer.parseInt(orderNumber));
@@ -425,16 +428,17 @@ public class Sales {
                     System.out.println("------------------------------------------------\n");
                 }
 
-                productCode = rs.getString("productCode");
-                productName = rs.getString("productName");
-                quantityOrdered = rs.getInt("quantityOrdered");
-                priceEach = rs.getDouble("priceEach");
-                orderLineNumber = rs.getInt("orderLineNumber");
-                referenceNo = rs.getInt("referenceNo");
-                end_username = rs.getString("end_username");
-                end_userreason = rs.getString("end_userreason");
-                tempSalesList.add(new Sales(productCode, quantityOrdered, priceEach, orderLineNumber, referenceNo, productName, end_username, end_userreason));
-
+                if (rs.getString("productCode") != null) {
+                    productCode = rs.getString("productCode");
+                    productName = rs.getString("productName");
+                    quantityOrdered = rs.getInt("quantityOrdered");
+                    priceEach = rs.getDouble("priceEach");
+                    orderLineNumber = rs.getInt("orderLineNumber");
+                    referenceNo = rs.getInt("referenceNo");
+                    end_username = rs.getString("end_username");
+                    end_userreason = rs.getString("end_userreason");
+                    tempSalesList.add(new Sales(productCode, quantityOrdered, priceEach, orderLineNumber, referenceNo, productName, end_username, end_userreason));
+                }
             }
 
 
@@ -482,7 +486,7 @@ public class Sales {
         // TODO determine get previous assignment or newly?
 
         try {
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=root");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
 
