@@ -458,10 +458,7 @@ BEGIN
     
     START TRANSACTION;
     
-    -- Lock the row to ensure it cannot be modified by other transactions
-    SELECT * FROM products WHERE productCode = v_productCode FOR UPDATE;
-    SELECT * FROM current_products WHERE productCode = v_productCode FOR UPDATE;
-    
+    SELECT * FROM productlines WHERE productLine = v_productLine LOCK IN SHARE MODE;
     -- Insert into products table
     INSERT INTO products (productCode, productName, productScale, productVendor, productDescription, buyPrice, productStatus, createdBy, createdReason) 
     VALUES (v_productCode, v_productName, v_productScale, v_productVendor, v_productDescription, v_buyprice, 'C', v_end_username, v_end_userreason);
@@ -494,6 +491,7 @@ BEGIN
     INSERT INTO product_productlines (productCode, productLine, createdBy, createdReason) 
     VALUES (v_productCode, v_productLine, v_end_username, v_end_userreason);
     
+    DO SLEEP(15);
     COMMIT;
     
     
@@ -645,9 +643,9 @@ BEGIN
     END;
 
     START TRANSACTION;
-
+    
     -- Check if the user is an inventory manager
-    IF NOT EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = p_inventoryManagerId) THEN
+    IF NOT EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = p_inventoryManagerId LOCK IN SHARE MODE) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z1: Only inventory managers can discontinue products.';
     END IF;
 
@@ -656,6 +654,8 @@ BEGIN
     IF productExists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z2: Product not found in current products.';
     END IF;
+
+    SELECT * FROM products WHERE productCode = p_productCode FOR UPDATE;
 
     -- Update product_category to discontinued in products
     UPDATE products SET product_category = 'D' WHERE productCode = p_productCode;
@@ -702,6 +702,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR 20Z2: Product not found in discontinued products.';
     END IF;
 
+    SELECT * FROM products WHERE productCode = p_productCode FOR UPDATE;
+
     -- Update product_category to current in products
     UPDATE products SET product_category = 'C' WHERE productCode = p_productCode;
 
@@ -714,6 +716,58 @@ END;$$
 DELIMITER ;
 ;
 
+
+-- update_product_msrp
+USE `DBSALES26_G208`;
+DROP procedure IF EXISTS `update_product_msrp`;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE PROCEDURE update_product_msrp(
+    IN p_productCode VARCHAR(15),
+    IN p_MSRP DECIMAL(9,2),
+    IN p_end_username VARCHAR(45),
+    IN p_end_userreason VARCHAR(45)
+)
+BEGIN
+    DECLARE curr_productType CHAR(1);
+	
+   DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+		BEGIN
+			ROLLBACK;
+			RESIGNAL;
+		END;
+		
+	START TRANSACTION;
+
+	SELECT * FROM products WHERE productCode = p_productCode LOCK IN SHARE MODE;
+	SELECT * FROM product_wholesale WHERE productCode = p_productCode FOR UPDATE;
+	SELECT * FROM product_pricing WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate FOR UPDATE;
+
+    -- Check product type
+    SELECT product_type INTO curr_productType
+    FROM current_products
+    WHERE productCode = p_productCode LOCK IN SHARE MODE;
+
+    IF curr_productType = 'R' THEN
+        UPDATE product_pricing
+        SET MSRP = p_MSRP, end_username = p_end_username, end_userreason = p_end_userreason
+        WHERE productCode = p_productCode AND DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate;
+
+
+    ELSEIF curr_productType = 'W' THEN
+        -- For wholesale products, update the product_wholesale table
+        UPDATE product_wholesale
+        SET MSRP = p_MSRP, end_username = p_end_username, end_userreason = p_end_userreason
+        WHERE productCode = p_productCode;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR: Invalid product type.';
+    END IF;
+   
+   COMMIT;
+END$$
+
+DELIMITER ;
 
 
 

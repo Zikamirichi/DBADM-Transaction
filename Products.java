@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.*;
+import java.math.BigDecimal;
 
 public class Products {
     String productCode;
@@ -79,16 +80,9 @@ public class Products {
             stmt.setString(11, endUsername);
             stmt.setString(12, endUserReason);
 
-            System.out.println("\nPress enter key to start creating a product record");
-            sc.nextLine();
-
             stmt.executeUpdate();
 
             System.out.println("\nProduct record created successfully.");
-            System.out.println("\nPress enter key to end transaction");
-            sc.nextLine();
-
-            conn.commit();
 
             stmt.close();
             conn.close();
@@ -96,15 +90,6 @@ public class Products {
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-
             return 0;
         }
     }
@@ -130,6 +115,9 @@ public class Products {
             System.out.println("Enter End User Reason:");
             endUserReason = sc.nextLine();
 
+            PreparedStatement lockProductStmt = conn.prepareStatement("SELECT * FROM products WHERE productCode = ? LOCK IN SHARE MODE"); 
+            lockProductStmt.setString(1, productCode);
+
             PreparedStatement insertStmt = conn.prepareStatement(
                 "INSERT INTO product_productlines (productCode, productLine, end_username, end_userreason) VALUES (?, ?, ?, ?)");
             insertStmt.setString(1, productCode);
@@ -140,6 +128,7 @@ public class Products {
             System.out.println("\nPress enter key to start classifying the product into multiple product lines");
             sc.nextLine();
 
+            lockProductStmt.executeQuery();
             insertStmt.executeUpdate();
 
             System.out.println("\nProduct classified into multiple product lines successfully.");
@@ -149,6 +138,7 @@ public class Products {
             conn.commit();
 
             insertStmt.close();
+            lockProductStmt.close();
             conn.close();
 
             return 1;
@@ -230,27 +220,23 @@ public class Products {
     
                 System.out.println("\nProduct updated successfully.");
     
-                conn.commit();
+                
             } else {
                 System.out.println("Product not found.");
             }
     
             rs.close();
             selectStmt.close();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            conn.commit();
             conn.close();
     
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-    
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-    
             return 0;
         }
     }
@@ -260,7 +246,7 @@ public class Products {
         Connection conn = null;
     
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/dbsalesv2.5g208?useTimezone=true&serverTimezone=UTC&user=root&password=12345");
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
             conn.setAutoCommit(false);
     
@@ -275,22 +261,6 @@ public class Products {
                 System.out.println("Enter Inventory Manager ID:");
                 int inventoryManagerId = sc.nextInt();
                 sc.nextLine(); // Consume the newline character
-    
-                // Check if the inventory manager exists in the inventory_managers table
-                PreparedStatement checkManagerStmt = conn.prepareStatement(
-                    "SELECT 1 FROM inventory_managers WHERE employeeNumber = ?");
-                checkManagerStmt.setInt(1, inventoryManagerId);
-    
-                ResultSet managerRs = checkManagerStmt.executeQuery();
-                if (!managerRs.next()) {
-                    System.out.println("Error: Inventory Manager ID not found in inventory_managers. Please ensure the ID is correct.");
-                    managerRs.close();
-                    checkManagerStmt.close();
-                    conn.rollback();
-                    return 0;
-                }
-                managerRs.close();
-                checkManagerStmt.close();
     
                 System.out.println("Enter reason for discontinuation:");
                 String reason = sc.nextLine();
@@ -338,21 +308,55 @@ public class Products {
                 System.out.println("Invalid choice. Please enter 'D' for Discontinue or 'C' for Continue.");
             }
     
-            conn.commit();
             conn.close();
     
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
     
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-    
+            return 0;
+        }
+    }
+
+    public int updateMSRP() {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = null;
+
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            System.out.println("Enter new MSRP:");
+            double newMSRP = sc.nextDouble();
+            sc.nextLine(); // Consume the newline character
+
+            System.out.println("Enter your username:");
+            String endUsername = sc.nextLine();
+
+            System.out.println("Enter reason for update:");
+            String endUserReason = sc.nextLine();
+
+            CallableStatement updateMSRPStmt = conn.prepareCall("{CALL update_product_msrp(?, ?, ?, ?)}");
+            updateMSRPStmt.setString(1, productCode);
+            updateMSRPStmt.setDouble(2, newMSRP);
+            updateMSRPStmt.setString(3, endUsername);
+            updateMSRPStmt.setString(4, endUserReason);
+
+            System.out.println("\nPress enter key to update the MSRP");
+            sc.nextLine();
+
+            updateMSRPStmt.executeUpdate();
+            updateMSRPStmt.close();
+
+            conn.close();
+
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
             return 0;
         }
     }
@@ -368,10 +372,9 @@ public class Products {
     
             System.out.println("Enter Product Code:");
             productCode = sc.nextLine();
-    
-            // Lock the current_products table to prevent other transactions from writing to it while this transaction is in progress
-            PreparedStatement lockStmt = conn.prepareStatement("LOCK TABLES current_products READ");
-            lockStmt.execute();
+            
+            System.out.println("\nPress enter key to view the product with its MSRP price range");
+            sc.nextLine();
     
             PreparedStatement selectStmt = conn.prepareStatement(
                 "SELECT p.productName, cp.product_type FROM products p JOIN current_products cp ON p.productCode = cp.productCode WHERE p.productCode = ? LOCK IN SHARE MODE");
@@ -419,14 +422,56 @@ public class Products {
     
             rs.close();
             selectStmt.close();
-    
-            // Unlock the tables after the transaction is done
-            PreparedStatement unlockStmt = conn.prepareStatement("UNLOCK TABLES");
-            unlockStmt.execute();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
     
             conn.commit();
             conn.close();
     
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    public int updateProductMSRP() {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = null;
+
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+
+            System.out.println("Enter Product Code:");
+            productCode = sc.nextLine();
+
+            System.out.println("Enter New MSRP:");
+            MSRP = sc.nextDouble();
+            sc.nextLine(); // Consume the newline character
+
+            System.out.println("Enter your username:");
+            endUsername = sc.nextLine();
+
+            System.out.println("Enter reason for update:");
+            endUserReason = sc.nextLine();
+
+            CallableStatement stmt = conn.prepareCall("{CALL update_product_msrp(?, ?, ?, ?)}");
+            stmt.setString(1, productCode);
+            stmt.setBigDecimal(2, BigDecimal.valueOf(MSRP));
+            stmt.setString(3, endUsername);
+            stmt.setString(4, endUserReason);
+
+            System.out.println("\nPress enter key to update the MSRP");
+            sc.nextLine();
+
+            stmt.executeUpdate();
+            stmt.close();
+
+            System.out.println("\nMSRP updated successfully.");
+            conn.close();
+
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
@@ -439,7 +484,7 @@ public class Products {
         int choice = 0;
 
         System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
-                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product");
+                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product\n[6] Update MSRP");
         choice = sc.nextInt();
         Products p = new Products();
 
@@ -448,6 +493,7 @@ public class Products {
         if (choice == 3) p.updateProduct();
         if (choice == 4) p.viewProductsWithPriceRange();
         if (choice == 5) p.discontinueOrReintroduceProduct();
+        if (choice == 6) p.updateProductMSRP();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
