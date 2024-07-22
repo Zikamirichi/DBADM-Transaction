@@ -220,27 +220,23 @@ public class Products {
     
                 System.out.println("\nProduct updated successfully.");
     
-                conn.commit();
+                
             } else {
                 System.out.println("Product not found.");
             }
     
             rs.close();
             selectStmt.close();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            conn.commit();
             conn.close();
     
             return 1;
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-    
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException rollbackEx) {
-                System.out.println("Error rolling back transaction: " + rollbackEx.getMessage());
-            }
-    
             return 0;
         }
     }
