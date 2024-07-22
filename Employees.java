@@ -837,9 +837,10 @@ public class Employees {
         System.out.println("Enter Start Date:");
         startDate = sc.nextLine();
 
-        System.out.println("Enter Sales Manager Number:");
-        end_username = sc.nextLine();
+        System.out.println("Enter New Sales Manager Number:");
+        salesManagerNumber = sc.nextInt();
 
+        sc.nextLine();
         System.out.println("Enter End Username:");
         end_username = sc.nextLine();
 
@@ -855,10 +856,10 @@ public class Employees {
             sc.nextLine();
 
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
-            pstmt.setInt(1, employeeNumber);
+            pstmt.setInt(1, salesManagerNumber);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE salesManagerNumber = ? LOCK IN SHARE MODE");
+            pstmt = conn.prepareStatement("SELECT * FROM sales_managers WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, salesManagerNumber);
             pstmt.executeQuery();
 
@@ -868,21 +869,22 @@ public class Employees {
             pstmt.setString(3, startDate);
             pstmt.executeQuery();
 
-            pstmt = conn.prepareStatement("UPDATE employees SET salesManagerNumber = ?, end_username = ?, end_userreason = ? WHERE employeeNumber = ? AND officeCode = ? AND startDate = ? ");
+            pstmt = conn.prepareStatement("UPDATE salesRepAssignments SET salesManagerNumber = ?, end_username = ?, end_userreason = ? WHERE employeeNumber = ? AND officeCode = ? AND startDate = ? ");
             pstmt.setInt(1, salesManagerNumber);
             pstmt.setString(2, end_username);
             pstmt.setString(3, end_userreason);
             pstmt.setInt(4, employeeNumber);
             pstmt.setString(5, officeCode);
             pstmt.setString(6, startDate);
-
-            conn.commit();
-
-            pstmt.close();
-            conn.close();
+            pstmt.executeUpdate();
 
             System.out.println("Employee record has been updated successfully.");
             System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
 
             return 1; // Success
         } catch (SQLException e) {
