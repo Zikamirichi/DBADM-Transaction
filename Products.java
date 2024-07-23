@@ -627,17 +627,17 @@ public class Products {
         int choice = 0;
 
         System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
-                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product\n[6] Update MSRP\n[7] Get Product Info");
+                "[3] Update Product\n[4] Get Product Info\n[5] Update MSRP\n[6] View a Product with its MSRP Price Range\n[7] Discontinue or Reintroduce Product\n");
         choice = sc.nextInt();
         Products p = new Products();
 
         if (choice == 1) p.createProduct();
         if (choice == 2) p.classifyProductIntoMultipleProductLines();
         if (choice == 3) p.updateProduct();
-        if (choice == 4) p.viewProductsWithPriceRange();
-        if (choice == 5) p.discontinueOrReintroduceProduct();
-        if (choice == 6) p.updateProductMSRP();
-        if (choice == 7) p.getProductInfo();
+        if (choice == 4) p.getProductInfo();
+        if (choice == 5) p.updateMSRP();
+        if (choice == 6) p.viewProductsWithPriceRange();
+        if (choice == 7) p.discontinueOrReintroduceProduct();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
