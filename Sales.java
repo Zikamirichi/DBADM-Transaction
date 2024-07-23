@@ -146,7 +146,7 @@ public class Sales {
             System.out.println("Press enter key to start transaction");
             sc.nextLine();
 
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM current_products WHERE productCode=?");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM current_products WHERE productCode=? FOR UPDATE");
             pstmt.setString(1, productCode);
             pstmt.executeQuery();
 
