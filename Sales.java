@@ -575,7 +575,7 @@ public class Sales {
         Scanner sc     = new Scanner (System.in);
         int     choice = 0;
         // Letting the use choose between the two functions
-        System.out.println("Enter [1] Create an order\n[2] Update order\n" +
+        System.out.println("Enter \n[1] Create an order\n[2] Update order\n" +
                 "[3] Record products ordered\n[4] Update ordered products\n" +
                 "[5] Get entire order\n[6] Get product together with allowable pricing ");
         choice = sc.nextInt();
