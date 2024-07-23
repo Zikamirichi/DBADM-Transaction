@@ -108,6 +108,7 @@ public class Sales {
             sc.nextLine();
 
             pstmt.close();
+            conn.commit();
             conn.close();
 
             return 1;
