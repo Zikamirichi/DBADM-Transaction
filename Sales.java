@@ -321,12 +321,15 @@ public class Sales {
             pstmt.setInt(1, Integer.parseInt(orderNumber));
             pstmt.setString(2, productCode);
 
+            PreparedStatement lockCurrentProduct = conn.prepareStatement("SELECT * FROM current_products WHERE productCode= ? FOR UPDATE");
+            lockCurrentProduct.setString(1, productCode);
+
 
             System.out.println("Press enter key to start retrieving the data");
             sc.nextLine();
 
+            lockCurrentProduct.executeQuery();
             ResultSet rs = pstmt.executeQuery();
-
 
             while (rs.next()) {
                 productCode = rs.getString("productCode");
