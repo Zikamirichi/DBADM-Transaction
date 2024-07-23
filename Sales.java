@@ -442,7 +442,7 @@ public class Sales {
             boolean flag = true;
             ArrayList<Sales> tempSalesList = new ArrayList<>();
             Sales temp;
-
+            
             while (rs.next()) {
                 if (flag) {
                     orderDate = rs.getString("orderDate");
@@ -552,6 +552,15 @@ public class Sales {
                 System.out.println("End Username: " + end_username);
                 System.out.println("End User Reason: " + end_userreason);
             }
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            rs.close();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
 
             return 1;
         } catch (Exception e) {
