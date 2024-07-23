@@ -74,8 +74,6 @@ public class Sales {
         System.out.println("Enter End User Reason: ");
         end_userreason = sc.nextLine();
 
-        // TODO determine get previous assignment or newly?
-
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
@@ -108,6 +106,7 @@ public class Sales {
             sc.nextLine();
 
             pstmt.close();
+            conn.commit();
             conn.close();
 
             return 1;
@@ -138,10 +137,6 @@ public class Sales {
 
         System.out.println("Enter End User Reason: ");
         end_userreason = sc.nextLine();
-
-
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
@@ -189,8 +184,6 @@ public class Sales {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Order Number:");
         orderNumber = sc.nextLine();
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
@@ -306,8 +299,6 @@ public class Sales {
         System.out.println("Enter Product Code:");
         productCode = sc.nextLine();
 
-        // TODO determine get previous assignment or newly?
-
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
@@ -320,12 +311,15 @@ public class Sales {
             pstmt.setInt(1, Integer.parseInt(orderNumber));
             pstmt.setString(2, productCode);
 
+            PreparedStatement lockCurrentProduct = conn.prepareStatement("SELECT * FROM current_products WHERE productCode= ? FOR UPDATE");
+            lockCurrentProduct.setString(1, productCode);
+
 
             System.out.println("Press enter key to start retrieving the data");
             sc.nextLine();
 
+            lockCurrentProduct.executeQuery();
             ResultSet rs = pstmt.executeQuery();
-
 
             while (rs.next()) {
                 productCode = rs.getString("productCode");
@@ -420,8 +414,6 @@ public class Sales {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Order Number:");
         orderNumber = sc.nextLine();
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
@@ -522,8 +514,6 @@ public class Sales {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Product Number:");
         productCode = sc.nextLine();
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
