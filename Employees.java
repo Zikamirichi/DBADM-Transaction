@@ -328,7 +328,15 @@ public class Employees {
 
             pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, salesManagerNumber);
-            pstmt.executeQuery();
+            ResultSet smRs = pstmt.executeQuery();
+
+            if (smRs.next()) {
+                isDeactivated = smRs.getInt("is_deactivated");
+                if (isDeactivated == 1) {
+                    System.out.println("Sales Manager is deactivated. Cannot assign sales rep.");
+                    return 0;
+                }
+            }
 
             // lock to prevent sales rep from being deactivated
             pstmt = conn.prepareStatement("SELECT * FROM salesRepresentatives WHERE employeeNumber = ? LOCK IN SHARE MODE");
@@ -337,7 +345,15 @@ public class Employees {
 
             pstmt = conn.prepareStatement("SELECT * FROM employees WHERE employeeNumber = ? LOCK IN SHARE MODE");
             pstmt.setInt(1, employeeNumber);
-            pstmt.executeQuery();
+            ResultSet empRs = pstmt.executeQuery();
+
+            if (empRs.next()) {
+                isDeactivated = empRs.getInt("is_deactivated");
+                if (isDeactivated == 1) {
+                    System.out.println("Sales Rep is deactivated. Cannot assign sales rep.");
+                    return 0;
+                }
+            }
 
             pstmt = conn.prepareStatement("SELECT * FROM salesRepAssignments WHERE employeeNumber = ? ORDER BY endDate DESC LIMIT 1 LOCK IN SHARE MODE");
             pstmt.setInt(1, employeeNumber);
