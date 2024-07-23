@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.*;
+
 import java.math.BigDecimal;
 
 public class Products {
@@ -485,12 +486,148 @@ public class Products {
         }
     }
 
+    public int getAllProductRecords() {
+        Scanner sc = new Scanner(System.in);
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products LOCK IN SHARE MODE");
+
+            System.out.println("\n Press enter key to view all product records");
+            sc.nextLine();
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                productCode = rs.getString("productCode");
+                productName = rs.getString("productName");
+                productScale = rs.getString("productScale");
+                productVendor = rs.getString("productVendor");
+                productDescription = rs.getString("productDescription");
+                buyPrice = rs.getDouble("buyPrice");
+                productCategory = rs.getString("product_category");
+                endUsername = rs.getString("end_username");
+                endUserReason = rs.getString("end_userreason");
+
+                stmt = conn.prepareStatement("SELECT * FROM product_productlines pp LEFT JOIN productlines p ON pp.productLine = p.productLine WHERE pp.productCode = ? LOCK IN SHARE MODE");
+                stmt.setString(1, productCode);
+                ResultSet productLines = stmt.executeQuery();
+
+                System.out.println("\nProduct Code: " + productCode);
+                System.out.println("Product Name: " + productName);
+                System.out.println("Product Scale: " + productScale);
+                System.out.println("Product Vendor: " + productVendor);
+                System.out.println("Product Description: " + productDescription);
+                System.out.println("Buy Price: " + buyPrice);
+                System.out.println("Product Category: " + productCategory);
+                System.out.println("End Username: " + endUsername);
+                System.out.println("End User Reason: " + endUserReason);
+
+                System.out.println("Product Lines:");
+                while (productLines.next()) {
+                    System.out.println(productLines.getString("productLine"));
+                }
+                productLines.close();
+            }
+
+            System.err.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            rs.close();
+            stmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getSpecificProductRecord() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter Product Code:");
+        productCode = sc.nextLine();
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products WHERE productCode = ? LOCK IN SHARE MODE");
+            stmt.setString(1, productCode);
+
+            System.out.println("\nPress enter key to view the specific product record");
+            sc.nextLine();
+
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                productName = rs.getString("productName");
+                productScale = rs.getString("productScale");
+                productVendor = rs.getString("productVendor");
+                productDescription = rs.getString("productDescription");
+                buyPrice = rs.getDouble("buyPrice");
+                productCategory = rs.getString("product_category");
+                endUsername = rs.getString("end_username");
+                endUserReason = rs.getString("end_userreason");
+
+                stmt = conn.prepareStatement("SELECT * FROM product_productlines pp LEFT JOIN productlines p ON pp.productLine = p.productLine WHERE pp.productCode = ? LOCK IN SHARE MODE");
+                stmt.setString(1, productCode);
+                ResultSet productLines = stmt.executeQuery();
+
+                System.out.println("\nProduct Code: " + productCode);
+                System.out.println("Product Name: " + productName);
+                System.out.println("Product Scale: " + productScale);
+                System.out.println("Product Vendor: " + productVendor);
+                System.out.println("Product Description: " + productDescription);
+                System.out.println("Buy Price: " + buyPrice);
+                System.out.println("Product Category: " + productCategory);
+                System.out.println("End Username: " + endUsername);
+                System.out.println("End User Reason: " + endUserReason);
+
+                System.out.println("Product Lines:");
+                while (productLines.next()) {
+                    System.out.println(productLines.getString("productLine"));
+                }
+                productLines.close();
+            } else {
+                System.out.println("Product not found.");
+            }
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            rs.close();
+            stmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getProductInfo() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("[1] View All Product Records\n[2] View Specific Product Record");
+        int choice = sc.nextInt();
+
+        if (choice == 1) return getAllProductRecords();
+        if (choice == 2) return getSpecificProductRecord();
+
+        return 0;
+    }
+
     public static void main(String args[]) {
         Scanner sc = new Scanner(System.in);
         int choice = 0;
 
         System.out.println("Enter the number of your choice:\n[1] Create Product\n[2] Classify Product Into Multiple Product Lines\n" +
-                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product\n[6] Update MSRP");
+                "[3] Update Product\n[4] View a Product with its MSRP Price Range\n[5] Discontinue or Reintroduce Product\n[6] Update MSRP\n[7] Get Product Info");
         choice = sc.nextInt();
         Products p = new Products();
 
@@ -500,6 +637,7 @@ public class Products {
         if (choice == 4) p.viewProductsWithPriceRange();
         if (choice == 5) p.discontinueOrReintroduceProduct();
         if (choice == 6) p.updateProductMSRP();
+        if (choice == 7) p.getProductInfo();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
