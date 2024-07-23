@@ -490,7 +490,8 @@ public class Products {
         Scanner sc = new Scanner(System.in);
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
-
+            conn.setAutoCommit(false);
+    
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products LOCK IN SHARE MODE");
 
             System.out.println("\n Press enter key to view all product records");
@@ -553,7 +554,8 @@ public class Products {
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
-
+            conn.setAutoCommit(false);
+    
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products WHERE productCode = ? LOCK IN SHARE MODE");
             stmt.setString(1, productCode);
 
