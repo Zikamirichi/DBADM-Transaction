@@ -150,6 +150,10 @@ public class Sales {
             pstmt.setString(1, productCode);
             pstmt.executeQuery();
 
+            pstmt = conn.prepareStatement("SELECT * FROM orders WHERE orderNumber=? LOCK IN SHARE MODE");
+            pstmt.setInt(1, Integer.parseInt(orderNumber));
+            pstmt.executeQuery();
+
             pstmt = conn.prepareStatement(
                     "INSERT INTO orderdetails (`orderNumber`, `productCode`, `quantityOrdered`, `priceEach`, `end_username`, `end_userreason`) " +
                             "VALUES (?, ?, ?, ?, ?, ?)");
@@ -313,12 +317,15 @@ public class Sales {
 
             PreparedStatement lockCurrentProduct = conn.prepareStatement("SELECT * FROM current_products WHERE productCode= ? FOR UPDATE");
             lockCurrentProduct.setString(1, productCode);
+            PreparedStatement lockOrder = conn.prepareStatement("SELECT * FROM orders WHERE orderNumber= ? LOCK IN SHARE MODE");
+            lockOrder.setInt(1, Integer.parseInt(orderNumber));
 
 
             System.out.println("Press enter key to start retrieving the data");
             sc.nextLine();
 
             lockCurrentProduct.executeQuery();
+            lockOrder.executeQuery();
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
