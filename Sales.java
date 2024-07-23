@@ -417,7 +417,7 @@ public class Sales {
         }
     }
 
-    public int getOrder() {
+    public int getSpecificOrder() {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Order Number:");
         orderNumber = sc.nextLine();
@@ -517,6 +517,59 @@ public class Sales {
 
     }
 
+    public int getAllOrderRecords() {
+        Scanner sc = new Scanner(System.in);
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM orders LOCK IN SHARE MODE ");
+
+            System.out.println("\nPress enter key to start retrieving the data");
+            sc.nextLine();
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while(rs.next()) {
+                orderNumber = rs.getString("orderNumber");
+                orderDate = rs.getString("orderDate");
+                requiredDate = rs.getString("requiredDate");
+                shippedDate = rs.getString("shippedDate");
+                status = rs.getString("status");
+                comments = rs.getString("comments");
+                customerNumber = rs.getInt("customerNumber");
+                end_username = rs.getString("end_username");
+                end_userreason = rs.getString("end_userreason");
+
+                System.out.println("\nOrder Number: " + orderNumber);
+                System.out.println("Order Date: " + orderDate);
+                System.out.println("Required Date: " + requiredDate);
+                System.out.println("Shipped Date: " + shippedDate);
+                System.out.println("status: " + status);
+                System.out.println("Comments: " + comments);
+                System.out.println("Customer Number: " + customerNumber);
+                System.out.println("End Username: " + end_username);
+                System.out.println("End User Reason: " + end_userreason);
+            }
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getOrder() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("[1] View All Orders [2] View Specific Order");
+        int choice = sc.nextInt();
+        if (choice == 1) return getAllOrderRecords();
+        if (choice == 2) return getSpecificOrder();
+
+        return 0;
+    }
+
     public int getProductPriceRange() {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Product Number:");
@@ -577,7 +630,7 @@ public class Sales {
         // Letting the use choose between the two functions
         System.out.println("Enter [1] Create an order  [2] Record products ordered \n" +
                 "[3] Update order  [4] Update ordered products \n" +
-                "[5] Get entire order  [6] Get product together with allowable pricing ");
+                "[5] Get order info  [6] Get product together with allowable pricing ");
         choice = sc.nextInt();
         Sales s = new Sales();
         if (choice==1) s.createOrder();
