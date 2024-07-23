@@ -135,26 +135,29 @@ BEGIN
     
     
     -- Check in sales_representatives
-    SELECT COUNT(1) INTO forLock FROM salesRepresentatives FOR UPDATE;
+    SELECT COUNT(1) INTO forLock FROM salesRepresentatives WHERE employeeNumber = v_employeeNumber FOR UPDATE;
     IF EXISTS (SELECT 1 FROM salesRepresentatives WHERE employeeNumber = v_employeeNumber) THEN
         SET v_tableName = 1;
     -- Check in sales_managers
-    SELECT COUNT(1) INTO forLock FROM sales_managers FOR UPDATE;
+    SELECT COUNT(1) INTO forLock FROM sales_managers WHERE employeeNumber = v_employeeNumber FOR UPDATE;
     ELSEIF EXISTS (SELECT 1 FROM sales_managers WHERE employeeNumber = v_employeeNumber) THEN
         SET v_tableName = 2;
     -- Check in inventory_managers
-    SELECT COUNT(1) INTO forLock FROM inventory_managers FOR UPDATE;
+    SELECT COUNT(1) INTO forLock FROM inventory_managers WHERE employeeNumber = v_employeeNumber FOR UPDATE;
     ELSEIF EXISTS (SELECT 1 FROM inventory_managers WHERE employeeNumber = v_employeeNumber) THEN
         SET v_tableName = 3;
     ELSE
         SET v_tableName = NULL;
-    END IF;
+    END IF; 
 
     RETURN v_tableName;
 END$$
 
 DELIMITER ;
 ;
+
+
+
 
 DROP TRIGGER IF EXISTS `DBSALES26_G208`.`employees_BEFORE_UPDATE`;
 

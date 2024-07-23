@@ -154,12 +154,14 @@ public class Employees {
             sc.nextLine();
             System.out.println("Enter Department Code:");
             deptCode = sc.nextInt();
+            sc.nextLine();
         } else if (option == 2) {
             System.out.println("Enter Employee Number:");
             employeeNumber = sc.nextInt();
             sc.nextLine();
             System.out.println("Enter Department Code:");
             deptCode = sc.nextInt();
+            sc.nextLine();
         } else if (option == 3) {
             System.out.println("Enter Employee Number:");
             employeeNumber = sc.nextInt();
