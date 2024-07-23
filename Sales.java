@@ -575,14 +575,14 @@ public class Sales {
         Scanner sc     = new Scanner (System.in);
         int     choice = 0;
         // Letting the use choose between the two functions
-        System.out.println("Enter [1] Create an order  [2] Record products ordered \n" +
-                "[3] Update order  [4] Update ordered products \n" +
-                "[5] Get entire order  [6] Get product together with allowable pricing ");
+        System.out.println("Enter [1] Create an order\n[2] Update order\n" +
+                "[3] Record products ordered\n[4] Update ordered products\n" +
+                "[5] Get entire order\n[6] Get product together with allowable pricing ");
         choice = sc.nextInt();
         Sales s = new Sales();
         if (choice==1) s.createOrder();
-        if (choice==2) s.recordProductsOrdered();
-        if (choice==3) s.updateOrder();
+        if (choice==2) s.updateOrder();
+        if (choice==3) s.recordProductsOrdered();
         if (choice==4) s.updateOrderedProducts();
         if (choice==5) s.getOrder();
         if (choice==6) s.getProductPriceRange();
