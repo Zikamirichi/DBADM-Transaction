@@ -579,58 +579,136 @@ public class Sales {
         return 0;
     }
 
-    public int getProductPriceRange() {
+    public int getAllProductRecords() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Product Number:");
-        productCode = sc.nextLine();
-
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
-            System.out.println("Connection Successful");
             conn.setAutoCommit(false);
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products p LEFT JOIN current_products cp ON cp.productCode = p.productCode WHERE p.product_category != 'D' LOCK IN SHARE MODE");
 
-            PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT getPrice(?, 'MIN') AS minPrice, getPrice(?, 'MAX') AS maxPrice LOCK IN SHARE MODE ");
-
-            pstmt.setString(1, productCode);
-            pstmt.setString(2, productCode);
-
-            System.out.println("Press enter key to start retrieving the data");
+            System.out.println("\nPress enter key to view all product records");
             sc.nextLine();
 
-            ResultSet rs = pstmt.executeQuery();
-            double minPrice = 0;
-            double maxPrice = 0;
-
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                minPrice = rs.getDouble("minPrice");
-                maxPrice = rs.getDouble("maxPrice");
+                productCode = rs.getString("productCode");
+                productName = rs.getString("productName");
 
+                stmt = conn.prepareStatement("SELECT * FROM product_productlines pp LEFT JOIN productlines p ON pp.productLine = p.productLine WHERE pp.productCode = ? LOCK IN SHARE MODE");
+                stmt.setString(1, productCode);
+                ResultSet productLines = stmt.executeQuery();
 
+                System.out.println("\nProduct Code: " + productCode);
+                System.out.println("Product Name: " + productName);
+                System.out.println("Quantity: " + rs.getInt("quantityInStock"));
+
+                System.out.println("Product Lines:");
+                while (productLines.next()) {
+                    System.out.println(productLines.getString("productLine"));
+                }
+                productLines.close();
             }
 
-            System.out.println("Product Price Range\n");
-            System.out.println("Product Code: " + productCode);
-            System.out.println("Minimum Price: " + minPrice);
-            System.out.println("Maximum Price: " + maxPrice);
-
-            rs.close();
-
-
-
-            System.out.println("Press enter key to end transaction");
+            System.err.println("\nPress enter key to end transaction");
             sc.nextLine();
 
-            pstmt.close();
+            rs.close();
+            stmt.close();
             conn.commit();
             conn.close();
 
             return 1;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
             return 0;
         }
+    }
+
+    public int getSpecificProduct() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter Product Code:");
+        productCode = sc.nextLine();
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            conn.setAutoCommit(false);
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products p LEFT JOIN current_products cp ON cp.productCode = p.productCode WHERE p.product_category != 'D' AND p.productCode = ? LOCK IN SHARE MODE");
+            stmt.setString(1, productCode);
+
+            System.out.println("\nPress enter key to view specific product record");
+            sc.nextLine();
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                productCode = rs.getString("productCode");
+                productName = rs.getString("productName");
+
+                stmt = conn.prepareStatement("SELECT * FROM product_productlines pp LEFT JOIN productlines p ON pp.productLine = p.productLine WHERE pp.productCode = ? LOCK IN SHARE MODE");
+                stmt.setString(1, productCode);
+                ResultSet productLines = stmt.executeQuery();
+
+                System.out.println("\nProduct Code: " + productCode);
+                System.out.println("Product Name: " + productName);
+                System.out.println("Quantity: " + rs.getInt("quantityInStock"));
+
+                System.out.println("Product Lines:");
+                while (productLines.next()) {
+                    System.out.println(productLines.getString("productLine"));
+                }
+                productLines.close();
+
+                CallableStatement msrpStmt = conn.prepareCall("{? = CALL getMSRP(?)}");
+                msrpStmt.registerOutParameter(1, Types.DECIMAL);
+                msrpStmt.setString(2, productCode);
+                msrpStmt.execute();
+    
+                double msrp = msrpStmt.getDouble(1);
+    
+                CallableStatement minPriceStmt = conn.prepareCall("{? = CALL getPrice(?, 'MIN')}");
+                CallableStatement maxPriceStmt = conn.prepareCall("{? = CALL getPrice(?, 'MAX')}");
+    
+                minPriceStmt.registerOutParameter(1, Types.DOUBLE);
+                minPriceStmt.setString(2, productCode);
+                minPriceStmt.execute();
+    
+                maxPriceStmt.registerOutParameter(1, Types.DOUBLE);
+                maxPriceStmt.setString(2, productCode);
+                maxPriceStmt.execute();
+    
+                double minPrice = minPriceStmt.getDouble(1);
+                double maxPrice = maxPriceStmt.getDouble(1);
+                System.out.println("MSRP: " + msrp);
+                System.out.println("Minimum Price: " + minPrice);
+                System.out.println("Maximum Price: " + maxPrice);
+            }
+
+            System.err.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            rs.close();
+            stmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    public int getProductInfo() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("[1] View All Products [2] View Specific Product");
+        int choice = sc.nextInt();
+
+        if (choice == 1) return getAllProductRecords();
+        if (choice == 2) return getSpecificProduct();
+
+        return 0;
     }
 
     public static void main (String args[]) {
@@ -639,7 +717,7 @@ public class Sales {
         // Letting the use choose between the two functions
         System.out.println("Enter \n[1] Create an order\n[2] Update order\n" +
                 "[3] Record products ordered\n[4] Update ordered products\n" +
-                "[5] Get order info\n[6] Get product together with allowable pricing ");
+                "[5] Get order info\n[6] Get product info");
         choice = sc.nextInt();
         Sales s = new Sales();
         if (choice==1) s.createOrder();
@@ -647,7 +725,7 @@ public class Sales {
         if (choice==3) s.recordProductsOrdered();
         if (choice==4) s.updateOrderedProducts();
         if (choice==5) s.getOrder();
-        if (choice==6) s.getProductPriceRange();
+        if (choice==6) s.getProductInfo();
 
         System.out.println("Press enter key to continue....");
         sc.nextLine();
