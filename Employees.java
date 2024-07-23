@@ -989,8 +989,8 @@ public class Employees {
         int     choice = 0;
         // Letting the use choose between the two functions
         System.out.println("\nEnter the number of your choice:\n[1] Create Employee\n[2] Reclassify Employee\n" +
-        "[3] Resign Employee\n[4] Create Sales Rep Assignments\n" + 
-        "[5] Get Sales Rep Assignments Info\n[6] Get Employee Info \n"+
+        "[3] Resign Employee\n[4] Get Employee Info\n" + 
+        "[5] Create Sales Rep Assignments\n[6] Get Sales Rep Assignments Info\n"+
         "[7] Assign Department Manager\n[8] Get Department Manager Info\n" +
         "[9] Update Supervising Manager \n[10] Get Office Info");
         choice = sc.nextInt();
@@ -998,9 +998,9 @@ public class Employees {
         if (choice==1) e.createEmployee();
         if (choice==2) e.reclassifyEmployee();
         if (choice==3) e.resignEmployee();
-        if (choice==4) e.createSalesRepAssignments();
-        if (choice==5) e.getSalesRepAssignmentsInfo();
-        if (choice==6) e.getEmployeeInfo();
+        if (choice==4) e.getEmployeeInfo();
+        if (choice==5) e.createSalesRepAssignments();
+        if (choice==6) e.getSalesRepAssignmentsInfo();
         if (choice==7) e.assignDepartmentManager();
         if (choice==8) e.getDepartmentManagerInfo();
         if (choice==9) e.updateSupervisingManager();
