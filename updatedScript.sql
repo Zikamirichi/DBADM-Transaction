@@ -774,6 +774,53 @@ DELIMITER ;
 
 -- For Sales Order Module
 
+-- Added Read Lock
+USE `DBSALES26_G208`;
+DROP function IF EXISTS `getPrice`;
+
+USE `DBSALES26_G208`;
+DROP function IF EXISTS `DBSALES26_G208`.`getPrice`;
+;
+
+DELIMITER $$
+USE `DBSALES26_G208`$$
+CREATE DEFINER=`DBADM_208`@`%` FUNCTION `getPrice`(v_productCode VARCHAR(15), v_mode VARCHAR(10)) RETURNS double
+    READS SQL DATA
+    DETERMINISTIC
+BEGIN
+	DECLARE curr_productType	CHAR(1);
+    DECLARE min_price			DOUBLE;
+    DECLARE max_price			DOUBLE;
+
+	SELECT product_type INTO curr_productType FROM current_products
+    WHERE productCode = v_productCode LOCK IN SHARE MODE;
+
+    IF (curr_productType = 'W') THEN
+		SELECT (MSRP*2), (MSRP*0.8) INTO max_price, min_price
+        FROM product_wholesale WHERE productCode = v_productCode LOCK IN SHARE MODE;
+    ELSEIF (curr_productType = 'R') THEN
+		SELECT (MSRP*2), (MSRP*0.8) INTO max_price, min_price
+        FROM   product_pricing
+        WHERE  productCode = v_productCode
+        AND    DATE(NOW()) <= endDate AND DATE(NOW()) >= startDate LOCK IN SHARE MODE;
+    END IF;
+
+    IF (max_price IS NULL) OR (min_price IS NULL) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERROR 01M1: Price of the product cannot be determined";
+    END IF;
+
+    IF (v_mode='MAX') THEN
+		RETURN max_price;
+    ELSE
+		RETURN min_price;
+	END IF;
+END$$
+
+DELIMITER ;
+;
+
+
+
 
 
 
