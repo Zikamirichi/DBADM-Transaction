@@ -925,6 +925,47 @@ public class Employees {
         }
     }
 
+    public int getOfficeInfo() {
+        Scanner sc = new Scanner(System.in);
+
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
+            System.out.println("Connection Successful");
+            conn.setAutoCommit(false);
+
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM offices LOCK IN SHARE MODE");
+            
+            System.out.println("\nPress enter key to start retrieving the data");
+            sc.nextLine();
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                officeCode = rs.getString("officeCode");
+                city = rs.getString("city");
+                country = rs.getString("country");
+
+                System.out.println("\nOffice Code: " + officeCode);
+                System.out.println("City: " + city);
+                System.out.println("Country: " + country);
+            }
+
+            rs.close();
+
+            System.out.println("\nPress enter key to end transaction");
+            sc.nextLine();
+
+            pstmt.close();
+            conn.commit();
+            conn.close();
+
+            return 1;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
     public static void main (String args[]) {
         Scanner sc     = new Scanner (System.in);
         int     choice = 0;
@@ -933,7 +974,7 @@ public class Employees {
         "[3] Resign Employee\n[4] Create Sales Rep Assignments\n" + 
         "[5] Get Sales Rep Assignments Info\n[6] Get Employee Info \n"+
         "[7] Assign Department Manager\n[8] Get Department Manager Info\n" +
-        "[9] Update Supervising Manager");
+        "[9] Update Supervising Manager \n[10] Get Office Info");
         choice = sc.nextInt();
         Employees e = new Employees();
         if (choice==1) e.createEmployee();
@@ -945,6 +986,7 @@ public class Employees {
         if (choice==7) e.assignDepartmentManager();
         if (choice==8) e.getDepartmentManagerInfo();
         if (choice==9) e.updateSupervisingManager();
+        if (choice==10) e.getOfficeInfo();
 
         
         System.out.println("Press enter key to continue....");
