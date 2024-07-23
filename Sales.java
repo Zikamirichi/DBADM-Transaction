@@ -74,8 +74,6 @@ public class Sales {
         System.out.println("Enter End User Reason: ");
         end_userreason = sc.nextLine();
 
-        // TODO determine get previous assignment or newly?
-
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
@@ -140,10 +138,6 @@ public class Sales {
         System.out.println("Enter End User Reason: ");
         end_userreason = sc.nextLine();
 
-
-
-        // TODO determine get previous assignment or newly?
-
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
@@ -190,8 +184,6 @@ public class Sales {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Order Number:");
         orderNumber = sc.nextLine();
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
@@ -306,8 +298,6 @@ public class Sales {
 
         System.out.println("Enter Product Code:");
         productCode = sc.nextLine();
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
@@ -425,8 +415,6 @@ public class Sales {
         System.out.println("Enter Order Number:");
         orderNumber = sc.nextLine();
 
-        // TODO determine get previous assignment or newly?
-
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
             System.out.println("Connection Successful");
@@ -526,8 +514,6 @@ public class Sales {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Product Number:");
         productCode = sc.nextLine();
-
-        // TODO determine get previous assignment or newly?
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://mysql-176128-0.cloudclusters.net:10107/DBSALES26_G208?useTimezone=true&serverTimezone=UTC&user=DBADM_208&password=DLSU1234!");
